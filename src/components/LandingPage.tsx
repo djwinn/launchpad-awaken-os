@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ const benefits = [
 ];
 
 export function LandingPage({ onStartClick, className }: LandingPageProps) {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
@@ -146,6 +148,15 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
                   Start Building
                 </Button>
               </form>
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth')}
+                  className="text-sm text-muted-foreground hover:text-primary underline"
+                >
+                  Already have an account? Log in
+                </button>
+              </div>
             </CardContent>
           </Card>
         </div>
