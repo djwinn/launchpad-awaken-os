@@ -11,34 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 
-// Extend Window interface for SpeechRecognition
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition;
-    webkitSpeechRecognition: new () => SpeechRecognition;
-  }
-}
 interface ChatInterfaceProps {
   userInfo: UserInfo;
   messages: Message[];
@@ -46,6 +18,7 @@ interface ChatInterfaceProps {
   onOutputComplete: () => void;
   conversationId: string | null;
 }
+
 export function ChatInterface({
   userInfo,
   messages,
@@ -56,113 +29,114 @@ export function ChatInterface({
   const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const isListeningRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Initialize speech recognition once
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.log('Speech recognition not supported');
-      return;
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
+  }, []);
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      console.log('Speech recognition started');
-      isListeningRef.current = true;
-      setIsListening(true);
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
-        } else {
-          interimTranscript += result[0].transcript;
-        }
-      }
-
-      if (finalTranscript) {
-        setInput(prev => {
-          const trimmed = prev.trim();
-          return trimmed ? trimmed + ' ' + finalTranscript : finalTranscript;
-        });
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      isListeningRef.current = false;
-      setIsListening(false);
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       
-      if (event.error === 'not-allowed') {
-        toast({
-          title: "Microphone access denied",
-          description: "Please allow microphone access in your browser settings.",
-          variant: "destructive"
-        });
-      } else if (event.error !== 'aborted') {
-        toast({
-          title: "Speech recognition error",
-          description: "Please try again.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    recognition.onend = () => {
-      console.log('Speech recognition ended');
-      isListeningRef.current = false;
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-    };
-  }, [toast]);
-
-  const toggleListening = useCallback(() => {
-    const recognition = recognitionRef.current;
-    
-    if (!recognition) {
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        
+        if (audioChunksRef.current.length === 0) {
+          setIsRecording(false);
+          return;
+        }
+        
+        setIsTranscribing(true);
+        
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Convert to base64
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          
+          reader.onloadend = async () => {
+            const base64Audio = (reader.result as string).split(',')[1];
+            
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                },
+                body: JSON.stringify({ audio: base64Audio }),
+              }
+            );
+            
+            const data = await response.json();
+            
+            if (data.error) {
+              throw new Error(data.error);
+            }
+            
+            if (data.text) {
+              setInput(prev => {
+                const trimmed = prev.trim();
+                return trimmed ? trimmed + ' ' + data.text : data.text;
+              });
+            }
+            
+            setIsTranscribing(false);
+            setIsRecording(false);
+          };
+        } catch (error) {
+          console.error('Transcription error:', error);
+          toast({
+            title: "Transcription failed",
+            description: "Could not transcribe audio. Please try again.",
+            variant: "destructive"
+          });
+          setIsTranscribing(false);
+          setIsRecording(false);
+        }
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+    } catch (error) {
+      console.error('Microphone access error:', error);
       toast({
-        title: "Not supported",
-        description: "Speech recognition is not supported in your browser.",
+        title: "Microphone access denied",
+        description: "Please allow microphone access in your browser settings.",
         variant: "destructive"
       });
-      return;
-    }
-
-    if (isListeningRef.current) {
-      console.log('Stopping recognition');
-      recognition.stop();
-    } else {
-      console.log('Starting recognition');
-      try {
-        recognition.start();
-      } catch (e) {
-        // Already started, stop and restart
-        recognition.stop();
-      }
     }
   }, [toast]);
+
+  const toggleRecording = useCallback(() => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [isRecording, startRecording, stopRecording]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -348,17 +322,19 @@ export function ChatInterface({
               <Button
                 type="button"
                 size="icon"
-                onClick={toggleListening}
-                disabled={isLoading}
+                onClick={toggleRecording}
+                disabled={isLoading || isTranscribing}
                 className={cn(
                   "h-8 w-8 transition-all",
-                  isListening 
+                  isRecording 
                     ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
-                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    : isTranscribing
+                      ? "bg-amber-500 text-white"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
                 )}
-                title={isListening ? "Click to stop recording" : "Click to start voice input"}
+                title={isRecording ? "Click to stop recording" : isTranscribing ? "Transcribing..." : "Click to start voice input"}
               >
-                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {isTranscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </Button>
               <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="h-8 w-8 bg-[#827666] hover:bg-[#6b625a]">
                 <Send className="w-4 h-4" />
