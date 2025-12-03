@@ -45,7 +45,7 @@ export function LandingPage({
   return <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center space-y-4">
-          <img src={logo} alt="Awaken Digital Logo" className="h-20 w-auto invert dark:invert-0" />
+          <img alt="Awaken Digital Logo" className="h-20 w-auto invert dark:invert-0" src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" />
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               Mini-Funnel Builder
@@ -77,7 +77,7 @@ export function LandingPage({
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
-              <Button type="submit" size="lg" className="w-full bg-[#cba159]">
+              <Button type="submit" size="lg" className="w-full bg-[#cba159] text-slate-950">
                 Start Building
               </Button>
             </form>
