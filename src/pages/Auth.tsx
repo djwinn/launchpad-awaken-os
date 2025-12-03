@@ -10,13 +10,15 @@ import { z } from 'zod';
 
 const passwordSchema = z.string().min(6, { message: "Password must be at least 6 characters" });
 
+type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
+
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const prefillName = searchParams.get('name') || '';
   const prefillEmail = searchParams.get('email') || '';
   const isSignupFlow = Boolean(prefillName && prefillEmail);
 
-  const [isLogin, setIsLogin] = useState(!isSignupFlow);
+  const [mode, setMode] = useState<AuthMode>(isSignupFlow ? 'signup' : 'login');
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
   const [name, setName] = useState(prefillName);
@@ -27,7 +29,9 @@ const Auth = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
+      if (event === 'PASSWORD_RECOVERY') {
+        setMode('reset');
+      } else if (session?.user) {
         navigate('/');
       }
     });
@@ -44,13 +48,80 @@ const Auth = () => {
   const validate = () => {
     const newErrors: { password?: string } = {};
     
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
+    if (mode === 'login' || mode === 'signup' || mode === 'reset') {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = passwordResult.error.errors[0].message;
+      }
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link.",
+        });
+        setMode('login');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Password updated",
+          description: "Your password has been reset successfully.",
+        });
+        navigate('/');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +132,7 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
@@ -100,7 +171,7 @@ const Auth = () => {
               title: "Welcome back!",
               description: "This email is already registered. Switching to login.",
             });
-            setIsLogin(true);
+            setMode('login');
           } else {
             toast({
               title: "Sign up failed",
@@ -126,37 +197,32 @@ const Auth = () => {
     }
   };
 
+  const getTitle = () => {
+    if (mode === 'reset') return 'Reset Password';
+    if (mode === 'forgot') return 'Forgot Password';
+    if (isSignupFlow) return 'Create Your Password';
+    return mode === 'login' ? 'Welcome Back' : 'Create Account';
+  };
+
+  const getDescription = () => {
+    if (mode === 'reset') return 'Enter your new password below.';
+    if (mode === 'forgot') return "Enter your email and we'll send you a reset link.";
+    if (isSignupFlow) return `Almost there, ${prefillName}! Just create a password to get started.`;
+    return mode === 'login' 
+      ? 'Sign in to continue building your mini-funnel' 
+      : 'Sign up to start building your client-getting system';
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#faf5f5]/[0.33] p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">
-            {isSignupFlow ? 'Create Your Password' : (isLogin ? 'Welcome Back' : 'Create Account')}
-          </CardTitle>
-          <CardDescription>
-            {isSignupFlow 
-              ? `Almost there, ${prefillName}! Just create a password to get started.`
-              : (isLogin 
-                ? 'Sign in to continue building your mini-funnel' 
-                : 'Sign up to start building your client-getting system')}
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">{getTitle()}</CardTitle>
+          <CardDescription>{getDescription()}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isSignupFlow && !isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            )}
-            
-            {!isSignupFlow && (
+          {mode === 'forgot' ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -165,63 +231,139 @@ const Auth = () => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
-            )}
-
-            {isSignupFlow && (
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">{prefillEmail}</p>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="text-sm text-muted-foreground hover:text-primary underline"
+                >
+                  Back to login
+                </button>
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={errors.password ? 'border-destructive' : ''}
-                autoFocus={isSignupFlow}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
-            
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Please wait...' : (isSignupFlow ? 'Create Account' : (isLogin ? 'Sign In' : 'Create Account'))}
-            </Button>
-          </form>
-          
-          {!isSignupFlow && (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                }}
-                className="text-sm text-muted-foreground hover:text-primary underline"
-              >
-                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-              </button>
-            </div>
-          )}
+            </form>
+          ) : mode === 'reset' ? (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">New Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={errors.password ? 'border-destructive' : ''}
+                  autoFocus
+                />
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Updating...' : 'Update Password'}
+              </Button>
+            </form>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isSignupFlow && mode === 'signup' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                )}
+                
+                {!isSignupFlow && (
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                )}
 
-          {isSignupFlow && (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="text-sm text-muted-foreground hover:text-primary underline"
-              >
-                Go back
-              </button>
-            </div>
+                {isSignupFlow && (
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">{prefillEmail}</p>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={errors.password ? 'border-destructive' : ''}
+                    autoFocus={isSignupFlow}
+                  />
+                  {errors.password && (
+                    <p className="text-sm text-destructive">{errors.password}</p>
+                  )}
+                </div>
+                
+                {mode === 'login' && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setMode('forgot')}
+                      className="text-sm text-muted-foreground hover:text-primary underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
+                
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? 'Please wait...' : (isSignupFlow ? 'Create Account' : (mode === 'login' ? 'Sign In' : 'Create Account'))}
+                </Button>
+              </form>
+              
+              {!isSignupFlow && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode(mode === 'login' ? 'signup' : 'login');
+                      setErrors({});
+                    }}
+                    className="text-sm text-muted-foreground hover:text-primary underline"
+                  >
+                    {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                  </button>
+                </div>
+              )}
+
+              {isSignupFlow && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="text-sm text-muted-foreground hover:text-primary underline"
+                  >
+                    Go back
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
