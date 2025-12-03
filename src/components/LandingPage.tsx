@@ -144,7 +144,7 @@ export function LandingPage({
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
-                <Button type="submit" size="lg" disabled={isLoading} className="w-full text-black font-bold bg-[#eccd8a] rounded-full">
+                <Button type="submit" size="lg" disabled={isLoading} className="w-full text-black font-bold bg-[#eccd8a] hover:bg-[#d4a854] rounded-full transition-colors">
                   {isLoading ? <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Checking...
