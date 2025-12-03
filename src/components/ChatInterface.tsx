@@ -4,7 +4,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { streamChat, isOutputComplete } from '@/lib/chat-api';
+import { streamChat } from '@/lib/chat-api';
+import { isOutputComplete } from '@/lib/output-parser';
+import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 
@@ -13,9 +15,10 @@ interface ChatInterfaceProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   onOutputComplete: () => void;
+  conversationId: string | null;
 }
 
-export function ChatInterface({ userInfo, messages, setMessages, onOutputComplete }: ChatInterfaceProps) {
+export function ChatInterface({ userInfo, messages, setMessages, onOutputComplete, conversationId }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -29,7 +32,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
     }
   }, [messages]);
 
-  // Initialize conversation
+  // Initialize conversation (only if no existing messages)
   useEffect(() => {
     if (hasInitialized.current || messages.length > 0) return;
     hasInitialized.current = true;
@@ -47,7 +50,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
       const assistantId = crypto.randomUUID();
 
       await streamChat({
-        messages: [initialMessage],
+        messages: [{ role: initialMessage.role, content: initialMessage.content }],
         onDelta: (text) => {
           assistantContent += text;
           setMessages([
@@ -55,8 +58,19 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
             { id: assistantId, role: 'assistant', content: assistantContent },
           ]);
         },
-        onDone: () => {
+        onDone: async () => {
           setIsLoading(false);
+          const finalMessages: Message[] = [
+            initialMessage,
+            { id: assistantId, role: 'assistant' as const, content: assistantContent },
+          ];
+          setMessages(finalMessages);
+          
+          // Save to database
+          if (conversationId) {
+            await updateConversationMessages(conversationId, finalMessages);
+          }
+          
           if (isOutputComplete(assistantContent)) {
             onOutputComplete();
           }
@@ -73,7 +87,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
     };
 
     startConversation();
-  }, [userInfo.name, messages.length, setMessages, onOutputComplete]);
+  }, [userInfo.name, messages.length, setMessages, onOutputComplete, conversationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,15 +99,16 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
       content: input.trim(),
     };
 
+    const newMessages = [...messages, userMessage];
     setInput('');
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(newMessages);
     setIsLoading(true);
 
     let assistantContent = '';
     const assistantId = crypto.randomUUID();
 
     await streamChat({
-      messages: [...messages, userMessage],
+      messages: newMessages.map(m => ({ role: m.role, content: m.content })),
       onDelta: (text) => {
         assistantContent += text;
         setMessages((prev) => {
@@ -104,9 +119,21 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
           return [...prev, { id: assistantId, role: 'assistant', content: assistantContent }];
         });
       },
-      onDone: () => {
+      onDone: async () => {
         setIsLoading(false);
+        
+        // Get final messages and save
+        const finalMessages = [...newMessages, { id: assistantId, role: 'assistant' as const, content: assistantContent }];
+        setMessages(finalMessages);
+        
+        if (conversationId) {
+          await updateConversationMessages(conversationId, finalMessages);
+        }
+        
         if (isOutputComplete(assistantContent)) {
+          if (conversationId) {
+            await markConversationComplete(conversationId, { completed: true });
+          }
           setTimeout(() => onOutputComplete(), 1000);
         }
       },
@@ -132,7 +159,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
-        <img src={logo} alt="Logo" className="h-8 w-auto invert dark:invert-0" />
+        <img src={logo} alt="Logo" className="h-8 w-auto" />
         <div>
           <h1 className="font-medium text-foreground">Mini-Funnel Builder</h1>
           <p className="text-xs text-muted-foreground">Building with {userInfo.name}</p>
@@ -152,7 +179,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
             >
               {message.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <img src={logo} alt="" className="w-5 h-5 invert dark:invert-0" />
+                  <img src={logo} alt="" className="w-5 h-5" />
                 </div>
               )}
               <div
@@ -170,7 +197,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex gap-3 justify-start">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <img src={logo} alt="" className="w-5 h-5 invert dark:invert-0" />
+                <img src={logo} alt="" className="w-5 h-5" />
               </div>
               <div className="bg-muted rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2 text-muted-foreground">

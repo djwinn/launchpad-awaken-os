@@ -3,10 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { UserInfo } from '@/types/chat';
-import logo from '@/assets/logo.png';
+import { Loader2 } from 'lucide-react';
+import { findIncompleteConversation, createConversation, deleteConversation } from '@/lib/conversations';
+import { ResumeDialog } from '@/components/ResumeDialog';
+import type { UserInfo, Message, Conversation } from '@/types/chat';
+
 interface LandingPageProps {
-  onStart: (userInfo: UserInfo) => void;
+  onStart: (userInfo: UserInfo, conversationId: string, existingMessages?: Message[]) => void;
 }
 export function LandingPage({
   onStart
@@ -33,13 +36,52 @@ export function LandingPage({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [existingConversation, setExistingConversation] = useState<Conversation | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onStart({
-        name: name.trim(),
-        email: email.trim()
-      });
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    const existing = await findIncompleteConversation(email.trim());
+
+    if (existing && existing.messages.length > 0) {
+      setExistingConversation(existing);
+      setShowResumeDialog(true);
+      setIsLoading(false);
+      return;
+    }
+
+    const conversationId = await createConversation(email.trim(), name.trim());
+    setIsLoading(false);
+    if (conversationId) {
+      onStart({ name: name.trim(), email: email.trim() }, conversationId);
+    }
+  };
+
+  const handleContinue = () => {
+    setShowResumeDialog(false);
+    if (existingConversation) {
+      onStart(
+        { name: existingConversation.user_name || name.trim(), email: email.trim() },
+        existingConversation.id,
+        existingConversation.messages
+      );
+    }
+  };
+
+  const handleStartFresh = async () => {
+    setShowResumeDialog(false);
+    setIsLoading(true);
+    if (existingConversation) {
+      await deleteConversation(existingConversation.id);
+    }
+    const conversationId = await createConversation(email.trim(), name.trim());
+    setIsLoading(false);
+    if (conversationId) {
+      onStart({ name: name.trim(), email: email.trim() }, conversationId);
     }
   };
   return <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
