@@ -186,7 +186,7 @@ export function ChatInterface({
               {message.role === 'assistant' && <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#827666]">
                   <img src={logo} alt="" className="w-5 h-5" />
                 </div>}
-              <div className={cn('rounded-2xl px-4 py-3 max-w-[85%]', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}>
+              <div className={cn('rounded-2xl px-4 py-3 max-w-[85%]', message.role === 'user' ? 'bg-[#827666] text-white' : 'bg-muted text-foreground')}>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
               </div>
             </div>)}
