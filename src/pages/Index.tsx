@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LandingPage } from '@/components/LandingPage';
 import { ChatInterface } from '@/components/ChatInterface';
 import { OutputView } from '@/components/OutputView';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,22 +12,18 @@ import type { Message, UserInfo, AppView } from '@/types/chat';
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [view, setView] = useState<AppView>('chat');
+  const [view, setView] = useState<AppView>('landing');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
+  // When user logs in, initialize their conversation
   useEffect(() => {
     const initConversation = async () => {
       if (!user?.email) return;
       
+      setInitializing(true);
       const name = user.user_metadata?.name || user.email.split('@')[0];
       setUserInfo({ name, email: user.email });
       
@@ -42,13 +39,23 @@ const Index = () => {
           setConversationId(newId);
         }
       }
+      setView('chat');
       setInitializing(false);
     };
 
-    if (user) {
+    if (user && view === 'landing') {
       initConversation();
     }
-  }, [user]);
+  }, [user, view]);
+
+  const handleStartClick = () => {
+    if (user) {
+      // User is already logged in, start conversation
+      return;
+    }
+    // Redirect to auth
+    navigate('/auth');
+  };
 
   const handleOutputComplete = () => {
     setView('output');
@@ -74,9 +81,18 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    setView('landing');
+    setUserInfo(null);
+    setMessages([]);
+    setConversationId(null);
   };
 
+  // Show landing page for unauthenticated users
+  if (!user && !loading) {
+    return <LandingPage onStartClick={handleStartClick} className="bg-[#faf5f5]/[0.33]" />;
+  }
+
+  // Show loading while checking auth or initializing conversation
   if (loading || initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#faf5f5]/[0.33]">
