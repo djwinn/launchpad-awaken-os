@@ -1,13 +1,56 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { LandingPage } from '@/components/LandingPage';
+import { ChatInterface } from '@/components/ChatInterface';
+import { OutputView } from '@/components/OutputView';
+import type { Message, UserInfo, AppView } from '@/types/chat';
 
 const Index = () => {
+  const [view, setView] = useState<AppView>('landing');
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  const handleStart = (info: UserInfo) => {
+    setUserInfo(info);
+    setMessages([]);
+    setView('chat');
+  };
+
+  const handleOutputComplete = () => {
+    setView('output');
+  };
+
+  const handleStartOver = () => {
+    setUserInfo(null);
+    setMessages([]);
+    setView('landing');
+  };
+
+  const handleBackToChat = () => {
+    setView('chat');
+  };
+
+  if (view === 'landing' || !userInfo) {
+    return <LandingPage onStart={handleStart} />;
+  }
+
+  if (view === 'output') {
+    return (
+      <OutputView
+        userInfo={userInfo}
+        messages={messages}
+        onStartOver={handleStartOver}
+        onBackToChat={handleBackToChat}
+      />
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <ChatInterface
+      userInfo={userInfo}
+      messages={messages}
+      setMessages={setMessages}
+      onOutputComplete={handleOutputComplete}
+    />
   );
 };
 
