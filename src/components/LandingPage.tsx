@@ -21,14 +21,16 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
-          <div className="w-full max-w-xl mx-auto mb-6 aspect-video rounded-lg overflow-hidden shadow-lg">
-            <iframe
-              src="https://www.youtube.com/embed/ECGHeaz8qFQ"
-              title="Introduction Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            />
+          <div className="w-full max-w-2xl mx-auto mb-10">
+            <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                src="https://www.youtube.com/embed/ECGHeaz8qFQ"
+                title="Introduction Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
           </div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
