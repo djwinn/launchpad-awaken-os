@@ -109,18 +109,25 @@ export function LandingPage({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Your Name</Label>
-                <Input id="name" type="text" placeholder="Sarah Smith" value={name} onChange={e => setName(e.target.value)} className={errors.name ? 'border-destructive' : ''} />
+                <Input id="name" type="text" placeholder="Sarah Smith" value={name} onChange={e => setName(e.target.value)} className={errors.name ? 'border-destructive' : ''} disabled={isLoading} />
                 {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="sarah@example.com" value={email} onChange={e => setEmail(e.target.value)} className={errors.email ? 'border-destructive' : ''} />
+                <Input id="email" type="email" placeholder="sarah@example.com" value={email} onChange={e => setEmail(e.target.value)} className={errors.email ? 'border-destructive' : ''} disabled={isLoading} />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
-              <Button type="submit" size="lg" className="w-full">
-                Start Building
+              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  'Start Building'
+                )}
               </Button>
             </form>
           </CardContent>
@@ -130,5 +137,11 @@ export function LandingPage({
           Takes about 10-15 minutes • No credit card required
         </p>
       </div>
+
+      <ResumeDialog
+        open={showResumeDialog}
+        onContinue={handleContinue}
+        onStartFresh={handleStartFresh}
+      />
     </main>;
 }
