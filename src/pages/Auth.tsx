@@ -28,6 +28,23 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check for error in URL hash (from failed password reset links)
+    const hash = window.location.hash;
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const errorDescription = params.get('error_description');
+      if (errorDescription) {
+        toast({
+          title: "Link expired",
+          description: "The reset link has expired. Please request a new one.",
+          variant: "destructive",
+        });
+        setMode('forgot');
+        // Clean up the URL
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMode('reset');
@@ -43,7 +60,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const validate = () => {
     const newErrors: { password?: string } = {};
