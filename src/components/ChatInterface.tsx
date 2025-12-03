@@ -138,12 +138,19 @@ export function ChatInterface({
     }
   }, [isRecording, startRecording, stopRecording]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom - triggers on messages change and loading state
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    const scrollToBottom = () => {
+      if (scrollRef.current) {
+        const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+        }
+      }
+    };
+    // Small delay to ensure content is rendered
+    requestAnimationFrame(scrollToBottom);
+  }, [messages, isLoading]);
 
   // Initialize conversation (only if no existing messages)
   useEffect(() => {
@@ -317,7 +324,7 @@ export function ChatInterface({
       <div className="border-t border-border/50 p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative">
-            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-24 resize-none" disabled={isLoading} />
+            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-24 resize-none overflow-y-auto" disabled={isLoading} />
             <div className="absolute right-2 bottom-2 flex gap-1">
               <Button
                 type="button"

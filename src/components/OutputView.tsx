@@ -11,6 +11,7 @@ import {
 import { Copy, Download, RotateCcw, Check, MessageSquare, Link, FileText, Globe, Heart, Calendar, Package, Mail, ClipboardList, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseOutputDocument, type ParsedOutput } from '@/lib/output-parser';
+import { MarkdownContent } from '@/components/MarkdownContent';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 
@@ -66,9 +67,9 @@ function SectionCard({ title, icon, instruction, content }: SectionCardProps) {
           {instruction}
         </div>
         <ScrollArea className="max-h-[400px]">
-          <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground p-3 bg-background rounded-lg border border-border/50">
-            {content}
-          </pre>
+          <div className="p-3 bg-background rounded-lg border border-border/50">
+            <MarkdownContent content={content} />
+          </div>
         </ScrollArea>
       </CardContent>
     </Card>
@@ -120,9 +121,9 @@ function EmailAccordion({ emails }: { emails: { title: string; content: string }
                       {copiedIndex === index ? 'Copied!' : 'Copy'}
                     </Button>
                   </div>
-                  <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground p-3 bg-background rounded-lg border border-border/50">
-                    {email.content}
-                  </pre>
+                  <div className="p-3 bg-background rounded-lg border border-border/50">
+                    <MarkdownContent content={email.content} />
+                  </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
