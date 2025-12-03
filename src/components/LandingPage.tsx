@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { findIncompleteConversation, createConversation, deleteConversation } from '@/lib/conversations';
 import { ResumeDialog } from '@/components/ResumeDialog';
 import type { UserInfo, Message, Conversation } from '@/types/chat';
@@ -11,6 +11,15 @@ import type { UserInfo, Message, Conversation } from '@/types/chat';
 interface LandingPageProps {
   onStart: (userInfo: UserInfo, conversationId: string, existingMessages?: Message[]) => void;
 }
+
+const benefits = [
+  "Your lead magnet written and structured (not just an outline — the actual content)",
+  "Landing page copy that speaks directly to your ideal client",
+  "10 nurture emails that build trust and book calls",
+  "A clear, compelling offer you can explain in 30 seconds",
+  "Everything formatted and ready to paste into your templates"
+];
+
 export function LandingPage({
   onStart
 }: LandingPageProps) {
@@ -84,64 +93,112 @@ export function LandingPage({
       onStart({ name: name.trim(), email: email.trim() }, conversationId);
     }
   };
-  return <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          <img alt="Awaken Digital Logo" className="h-20 w-auto" src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" />
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Mini-Funnel Builder
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Create your complete mini-funnel copy in one conversation
-            </p>
+
+  return (
+    <main className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="py-16 md:py-24 px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          <img 
+            alt="Awaken Digital Logo" 
+            className="h-16 w-auto mx-auto mb-8" 
+            src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" 
+          />
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
+            Stop Staring at a Blank Page.<br />
+            Start Signing Clients.
+          </h1>
+          
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in under an hour.
+          </p>
+        </div>
+      </section>
+
+      {/* Benefits + Form Section */}
+      <section className="pb-16 md:pb-24 px-4">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+          {/* Benefits */}
+          <div className="space-y-6">
+            <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
+              What You'll Get:
+            </h2>
+            <ul className="space-y-4">
+              {benefits.map((benefit, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-foreground/90 leading-relaxed">{benefit}</span>
+                </li>
+              ))}
+            </ul>
           </div>
+
+          {/* Form Card */}
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="space-y-1 pb-4">
+              <CardTitle className="text-xl">Get Started</CardTitle>
+              <CardDescription>
+                Enter your details below to begin your guided conversation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Your Name</Label>
+                  <Input 
+                    id="name" 
+                    type="text" 
+                    placeholder="Sarah Smith" 
+                    value={name} 
+                    onChange={e => setName(e.target.value)} 
+                    className={errors.name ? 'border-destructive' : ''} 
+                    disabled={isLoading} 
+                  />
+                  {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="sarah@example.com" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    className={errors.email ? 'border-destructive' : ''} 
+                    disabled={isLoading} 
+                  />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                </div>
+
+                <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    'Start Building'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
 
-        <Card className="border-border/50">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl">Get Started</CardTitle>
-            <CardDescription>
-              Our AI will guide you through a series of questions to understand your coaching business and create all the copy you need.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Your Name</Label>
-                <Input id="name" type="text" placeholder="Sarah Smith" value={name} onChange={e => setName(e.target.value)} className={errors.name ? 'border-destructive' : ''} disabled={isLoading} />
-                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="sarah@example.com" value={email} onChange={e => setEmail(e.target.value)} className={errors.email ? 'border-destructive' : ''} disabled={isLoading} />
-                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
-              </div>
-
-              <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  'Start Building'
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground mt-8">
           Takes about 10-15 minutes • No credit card required
         </p>
-      </div>
+      </section>
 
       <ResumeDialog
         open={showResumeDialog}
         onContinue={handleContinue}
         onStartFresh={handleStartFresh}
       />
-    </main>;
+    </main>
+  );
 }
