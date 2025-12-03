@@ -2,13 +2,40 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
 import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
+
+// Extend Window interface for SpeechRecognition
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 interface ChatInterfaceProps {
   userInfo: UserInfo;
   messages: Message[];
@@ -25,9 +52,57 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev + (prev ? ' ' : '') + transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in your browser.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -208,10 +283,26 @@ export function ChatInterface({
       <div className="border-t border-border/50 p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative">
-            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-12 resize-none" disabled={isLoading} />
-            <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="absolute right-2 bottom-2 h-8 w-8 bg-[#827666] hover:bg-[#6b625a]">
-              <Send className="w-4 h-4" />
-            </Button>
+            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-24 resize-none" disabled={isLoading} />
+            <div className="absolute right-2 bottom-2 flex gap-1">
+              <Button
+                type="button"
+                size="icon"
+                onClick={toggleListening}
+                disabled={isLoading}
+                className={cn(
+                  "h-8 w-8 transition-colors",
+                  isListening 
+                    ? "bg-red-500 hover:bg-red-600 text-white" 
+                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                )}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="h-8 w-8 bg-[#827666] hover:bg-[#6b625a]">
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
             Press Enter to send, Shift+Enter for new line
