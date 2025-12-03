@@ -97,28 +97,28 @@ export function LandingPage({
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="py-16 md:py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
+      <section className="pt-6 md:pt-10 pb-8 px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-4">
           <img 
             alt="Awaken Digital Logo" 
-            className="h-48 w-auto mx-auto mb-8" 
+            className="h-32 md:h-40 w-auto mx-auto mb-4" 
             src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" 
           />
           
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
             Stop Staring at a Blank Page.<br />
             Start Signing Clients.
           </h1>
           
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in under an hour.
           </p>
         </div>
       </section>
 
       {/* Benefits + Form Section */}
-      <section className="pb-16 md:pb-24 px-4">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-start">
+      <section className="pb-12 px-4">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
           <div className="space-y-6">
             <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
@@ -189,7 +189,7 @@ export function LandingPage({
           </Card>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-8">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Takes about 10-15 minutes • No credit card required
         </p>
       </section>
