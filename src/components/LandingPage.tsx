@@ -101,7 +101,7 @@ export function LandingPage({
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <img 
             alt="Awaken Digital Logo" 
-            className="h-16 w-auto mx-auto mb-8" 
+            className="h-48 w-auto mx-auto mb-8" 
             src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" 
           />
           
