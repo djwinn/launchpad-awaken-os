@@ -8,10 +8,12 @@ const Index = () => {
   const [view, setView] = useState<AppView>('landing');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
-  const handleStart = (info: UserInfo) => {
+  const handleStart = (info: UserInfo, convId: string, existingMessages?: Message[]) => {
     setUserInfo(info);
-    setMessages([]);
+    setConversationId(convId);
+    setMessages(existingMessages || []);
     setView('chat');
   };
 
@@ -22,6 +24,7 @@ const Index = () => {
   const handleStartOver = () => {
     setUserInfo(null);
     setMessages([]);
+    setConversationId(null);
     setView('landing');
   };
 
@@ -30,7 +33,7 @@ const Index = () => {
   };
 
   if (view === 'landing' || !userInfo) {
-    return <LandingPage onStart={handleStart} />;
+    return <LandingPage onStart={(info, convId, msgs) => handleStart(info, convId, msgs)} />;
   }
 
   if (view === 'output') {
@@ -50,6 +53,7 @@ const Index = () => {
       messages={messages}
       setMessages={setMessages}
       onOutputComplete={handleOutputComplete}
+      conversationId={conversationId}
     />
   );
 };

@@ -9,4 +9,16 @@ export interface UserInfo {
   email: string;
 }
 
+export interface Conversation {
+  id: string;
+  user_email: string;
+  user_name: string | null;
+  messages: Message[];
+  current_stage: string;
+  completed: boolean;
+  output: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type AppView = 'landing' | 'chat' | 'output';

@@ -3,7 +3,7 @@ import type { Message } from '@/types/chat';
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 interface StreamChatParams {
-  messages: Message[];
+  messages: Array<{ role: string; content: string }>;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: Error) => void;
@@ -96,19 +96,4 @@ export async function streamChat({ messages, onDelta, onDone, onError }: StreamC
   } catch (error) {
     onError(error instanceof Error ? error : new Error('Unknown error'));
   }
-}
-
-// Check if the output document is complete
-export function isOutputComplete(content: string): boolean {
-  return content.includes('YOUR COMPLETE MINI-FUNNEL COPY');
-}
-
-// Extract the output document from the conversation
-export function extractOutputDocument(messages: Message[]): string | null {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === 'assistant' && isOutputComplete(messages[i].content)) {
-      return messages[i].content;
-    }
-  }
-  return null;
 }
