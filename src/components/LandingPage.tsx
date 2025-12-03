@@ -94,7 +94,7 @@ export function LandingPage({
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
             Your Entire Client-Getting System,
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+          <p className="text-3xl md:text-4xl tracking-tight text-foreground leading-tight px-0 lg:text-4xl font-semibold">
             Built in One Conversation
           </p>
           
