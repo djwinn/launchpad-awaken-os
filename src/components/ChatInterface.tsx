@@ -209,7 +209,7 @@ export function ChatInterface({
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative">
             <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-12 resize-none" disabled={isLoading} />
-            <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="absolute right-2 bottom-2 h-8 w-8">
+            <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="absolute right-2 bottom-2 h-8 w-8 bg-[#827666] hover:bg-[#6b625a]">
               <Send className="w-4 h-4" />
             </Button>
           </div>
