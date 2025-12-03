@@ -56,6 +56,8 @@ export async function updateConversationMessages(
   conversationId: string,
   messages: Message[]
 ): Promise<boolean> {
+  console.log('Saving messages to conversation:', conversationId, 'count:', messages.length);
+  
   const { error } = await supabase
     .from('conversations')
     .update({
@@ -68,6 +70,7 @@ export async function updateConversationMessages(
     return false;
   }
 
+  console.log('Messages saved successfully');
   return true;
 }
 

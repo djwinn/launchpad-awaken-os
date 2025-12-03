@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LandingPage } from '@/components/LandingPage';
 import { ChatInterface } from '@/components/ChatInterface';
@@ -17,36 +17,48 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(false);
+  const initializingRef = useRef(false);
 
   // When user logs in, initialize their conversation
   useEffect(() => {
     const initConversation = async () => {
-      if (!user?.email) return;
+      // Prevent duplicate initialization
+      if (!user?.email || initializingRef.current) return;
+      initializingRef.current = true;
       
       setInitializing(true);
       const name = user.user_metadata?.name || user.email.split('@')[0];
       setUserInfo({ name, email: user.email });
       
-      // Check for existing incomplete conversation
-      const existing = await findIncompleteConversation(user.email);
-      if (existing) {
-        setConversationId(existing.id);
-        setMessages(existing.messages || []);
-      } else {
-        // Create new conversation
-        const newId = await createConversation(user.email, name);
-        if (newId) {
-          setConversationId(newId);
+      try {
+        // Check for existing incomplete conversation
+        const existing = await findIncompleteConversation(user.email);
+        if (existing) {
+          console.log('Found existing conversation:', existing.id);
+          setConversationId(existing.id);
+          setMessages(existing.messages || []);
+        } else {
+          // Create new conversation
+          console.log('Creating new conversation for:', user.email);
+          const newId = await createConversation(user.email, name);
+          if (newId) {
+            console.log('Created conversation:', newId);
+            setConversationId(newId);
+          }
         }
+        setView('chat');
+      } catch (error) {
+        console.error('Error initializing conversation:', error);
+      } finally {
+        setInitializing(false);
+        initializingRef.current = false;
       }
-      setView('chat');
-      setInitializing(false);
     };
 
-    if (user && view === 'landing') {
+    if (user && view === 'landing' && !loading) {
       initConversation();
     }
-  }, [user, view]);
+  }, [user, view, loading]);
 
   const handleStartClick = (name: string, email: string) => {
     // Pass name and email to auth page via URL params
