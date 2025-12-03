@@ -97,10 +97,10 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('already registered')) {
             toast({
-              title: "Account exists",
-              description: "This email is already registered. Please log in instead.",
-              variant: "destructive",
+              title: "Welcome back!",
+              description: "This email is already registered. Switching to login.",
             });
+            setIsLogin(true);
           } else {
             toast({
               title: "Sign up failed",
