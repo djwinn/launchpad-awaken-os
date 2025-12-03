@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import logo from '@/assets/logo.png';
 
 const passwordSchema = z.string().min(6, { message: "Password must be at least 6 characters" });
 
@@ -234,6 +235,9 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#faf5f5]/[0.33] p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img src={logo} alt="Logo" className="h-12" />
+          </div>
           <CardTitle className="text-2xl font-bold">{getTitle()}</CardTitle>
           <CardDescription>{getDescription()}</CardDescription>
         </CardHeader>
