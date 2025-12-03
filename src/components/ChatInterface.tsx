@@ -342,7 +342,7 @@ export function ChatInterface({
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Press Enter to send, Shift+Enter for new line
+            💡 Tip: Use the microphone to speak your answers in detail, or paste in existing materials you already have.
           </p>
         </form>
       </div>
