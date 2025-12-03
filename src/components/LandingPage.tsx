@@ -57,10 +57,10 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
             <ul className="space-y-4">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                    <Check className="w-4 h-4 text-primary" />
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1fb14c]/10 flex items-center justify-center mt-0.5">
+                    <Check className="w-4 h-4" style={{ color: '#1fb14c' }} />
                   </div>
-                  <span className="text-foreground/90 leading-relaxed">{benefit}</span>
+                  <span className="text-foreground/90 leading-relaxed font-semibold">{benefit}</span>
                 </li>
               ))}
             </ul>
