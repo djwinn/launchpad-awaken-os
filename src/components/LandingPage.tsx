@@ -89,7 +89,15 @@ export function LandingPage({
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
-          <img alt="Awaken Digital Logo" className="h-32 md:h-40 w-auto mx-auto mb-4" src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" />
+          <div className="w-full max-w-xl mx-auto mb-6 aspect-video rounded-lg overflow-hidden shadow-lg">
+            <iframe
+              src="https://www.youtube.com/embed/ECGHeaz8qFQ"
+              title="Introduction Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
             Your Entire Client-Getting System,
