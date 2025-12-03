@@ -1,37 +1,130 @@
-import { useState } from 'react';
-import { LandingPage } from '@/components/LandingPage';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChatInterface } from '@/components/ChatInterface';
 import { OutputView } from '@/components/OutputView';
+import { useAuth } from '@/hooks/useAuth';
+import { findIncompleteConversation, createConversation } from '@/lib/conversations';
+import { Button } from '@/components/ui/button';
+import { LogOut, Loader2 } from 'lucide-react';
 import type { Message, UserInfo, AppView } from '@/types/chat';
+
 const Index = () => {
-  const [view, setView] = useState<AppView>('landing');
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [view, setView] = useState<AppView>('chat');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const handleStart = (info: UserInfo, convId: string, existingMessages?: Message[]) => {
-    setUserInfo(info);
-    setConversationId(convId);
-    setMessages(existingMessages || []);
-    setView('chat');
-  };
+  const [initializing, setInitializing] = useState(true);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const initConversation = async () => {
+      if (!user?.email) return;
+      
+      const name = user.user_metadata?.name || user.email.split('@')[0];
+      setUserInfo({ name, email: user.email });
+      
+      // Check for existing incomplete conversation
+      const existing = await findIncompleteConversation(user.email);
+      if (existing) {
+        setConversationId(existing.id);
+        setMessages(existing.messages || []);
+      } else {
+        // Create new conversation
+        const newId = await createConversation(user.email, name);
+        if (newId) {
+          setConversationId(newId);
+        }
+      }
+      setInitializing(false);
+    };
+
+    if (user) {
+      initConversation();
+    }
+  }, [user]);
+
   const handleOutputComplete = () => {
     setView('output');
   };
-  const handleStartOver = () => {
-    setUserInfo(null);
-    setMessages([]);
-    setConversationId(null);
-    setView('landing');
+
+  const handleStartOver = async () => {
+    if (!user?.email) return;
+    
+    setInitializing(true);
+    const name = user.user_metadata?.name || user.email.split('@')[0];
+    const newId = await createConversation(user.email, name);
+    if (newId) {
+      setConversationId(newId);
+      setMessages([]);
+      setView('chat');
+    }
+    setInitializing(false);
   };
+
   const handleBackToChat = () => {
     setView('chat');
   };
-  if (view === 'landing' || !userInfo) {
-    return <LandingPage onStart={(info, convId, msgs) => handleStart(info, convId, msgs)} className="bg-[#faf5f5]/[0.33]" />;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (loading || initializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#faf5f5]/[0.33]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
+
+  if (!user || !userInfo) {
+    return null;
+  }
+
   if (view === 'output') {
-    return <OutputView userInfo={userInfo} messages={messages} onStartOver={handleStartOver} onBackToChat={handleBackToChat} />;
+    return (
+      <div className="relative">
+        <div className="absolute top-4 right-4 z-10">
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+        <OutputView 
+          userInfo={userInfo} 
+          messages={messages} 
+          onStartOver={handleStartOver} 
+          onBackToChat={handleBackToChat} 
+        />
+      </div>
+    );
   }
-  return <ChatInterface userInfo={userInfo} messages={messages} setMessages={setMessages} onOutputComplete={handleOutputComplete} conversationId={conversationId} />;
+
+  return (
+    <div className="relative">
+      <div className="absolute top-4 right-4 z-10">
+        <Button variant="outline" size="sm" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+      <ChatInterface 
+        userInfo={userInfo} 
+        messages={messages} 
+        setMessages={setMessages} 
+        onOutputComplete={handleOutputComplete} 
+        conversationId={conversationId} 
+      />
+    </div>
+  );
 };
+
 export default Index;
