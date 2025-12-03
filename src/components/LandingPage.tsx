@@ -9,10 +9,12 @@ import { ResumeDialog } from '@/components/ResumeDialog';
 import type { UserInfo, Message, Conversation } from '@/types/chat';
 interface LandingPageProps {
   onStart: (userInfo: UserInfo, conversationId: string, existingMessages?: Message[]) => void;
+  className?: string;
 }
 const benefits = ["Your lead magnet written and structured (not just an outline — the actual content)", "Landing page copy that speaks directly to your ideal client", "10 nurture emails that build trust and book calls", "A clear, compelling offer you can explain in 30 seconds", "Everything formatted and ready to paste into your templates"];
 export function LandingPage({
-  onStart
+  onStart,
+  className
 }: LandingPageProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -83,16 +85,18 @@ export function LandingPage({
       }, conversationId);
     }
   };
-  return <main className="min-h-screen bg-background">
+  return <main className={`min-h-screen bg-background ${className || ''}`}>
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <img alt="Awaken Digital Logo" className="h-32 md:h-40 w-auto mx-auto mb-4" src="/lovable-uploads/9b3205c4-a8f8-49cb-8bc7-7b766e4dbbba.png" />
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
-            Your Entire Client-Getting System,  <br />
-            Built in One Conversation
+            Your Entire Client-Getting System,
           </h1>
+          <p className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+            Built in One Conversation
+          </p>
           
           <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in under an hour.
