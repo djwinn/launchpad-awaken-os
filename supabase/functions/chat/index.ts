@@ -1,9 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1, 'Message content cannot be empty').max(50000, 'Message content too long')
+});
+
+const ChatRequestSchema = z.object({
+  messages: z.array(MessageSchema).min(1, 'At least one message required').max(100, 'Too many messages'),
+  userName: z.string().max(100, 'Name too long').optional()
+});
 
 const SYSTEM_PROMPT = `You are the AwakenOS Mini-Funnel Builder, an AI assistant that helps coaches and practitioners create a complete mini-funnel through conversation.
 
@@ -560,7 +572,19 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userName } = await req.json();
+    const rawBody = await req.json();
+    
+    // Validate input
+    const parseResult = ChatRequestSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error('Input validation failed:', parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format', details: parseResult.error.errors[0]?.message }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { messages, userName } = parseResult.data;
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     
     if (!ANTHROPIC_API_KEY) {
