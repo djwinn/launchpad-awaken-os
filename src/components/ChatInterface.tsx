@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
 import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
+import { useToast } from '@/hooks/use-toast';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 
@@ -25,9 +26,11 @@ interface SpeechRecognition extends EventTarget {
   lang: string;
   start(): void;
   stop(): void;
+  abort(): void;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
+  onstart: (() => void) | null;
 }
 
 declare global {
@@ -50,6 +53,7 @@ export function ChatInterface({
   onOutputComplete,
   conversationId
 }: ChatInterfaceProps) {
+  const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -57,52 +61,108 @@ export function ChatInterface({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isListeningRef = useRef(false);
 
-  // Initialize speech recognition
+  // Initialize speech recognition once
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(prev => prev + (prev ? ' ' : '') + transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in your browser.');
+    if (!SpeechRecognition) {
+      console.log('Speech recognition not supported');
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      recognitionRef.current.start();
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      console.log('Speech recognition started');
+      isListeningRef.current = true;
       setIsListening(true);
+    };
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setInput(prev => {
+          const trimmed = prev.trim();
+          return trimmed ? trimmed + ' ' + finalTranscript : finalTranscript;
+        });
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      isListeningRef.current = false;
+      setIsListening(false);
+      
+      if (event.error === 'not-allowed') {
+        toast({
+          title: "Microphone access denied",
+          description: "Please allow microphone access in your browser settings.",
+          variant: "destructive"
+        });
+      } else if (event.error !== 'aborted') {
+        toast({
+          title: "Speech recognition error",
+          description: "Please try again.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    recognition.onend = () => {
+      console.log('Speech recognition ended');
+      isListeningRef.current = false;
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [toast]);
+
+  const toggleListening = useCallback(() => {
+    const recognition = recognitionRef.current;
+    
+    if (!recognition) {
+      toast({
+        title: "Not supported",
+        description: "Speech recognition is not supported in your browser.",
+        variant: "destructive"
+      });
+      return;
     }
-  };
+
+    if (isListeningRef.current) {
+      console.log('Stopping recognition');
+      recognition.stop();
+    } else {
+      console.log('Starting recognition');
+      try {
+        recognition.start();
+      } catch (e) {
+        // Already started, stop and restart
+        recognition.stop();
+      }
+    }
+  }, [toast]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -291,11 +351,12 @@ export function ChatInterface({
                 onClick={toggleListening}
                 disabled={isLoading}
                 className={cn(
-                  "h-8 w-8 transition-colors",
+                  "h-8 w-8 transition-all",
                   isListening 
-                    ? "bg-red-500 hover:bg-red-600 text-white" 
+                    ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
                     : "bg-muted hover:bg-muted/80 text-muted-foreground"
                 )}
+                title={isListening ? "Click to stop recording" : "Click to start voice input"}
               >
                 {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
               </Button>
