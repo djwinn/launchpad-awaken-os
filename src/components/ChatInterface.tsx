@@ -8,6 +8,7 @@ import { streamChat } from '@/lib/chat-api';
 import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 
@@ -76,13 +77,20 @@ export function ChatInterface({
           reader.onloadend = async () => {
             const base64Audio = (reader.result as string).split(',')[1];
             
+            // Get session for authentication
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session?.access_token) {
+              throw new Error('Not authenticated');
+            }
+            
             const response = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
               {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+                  'Authorization': `Bearer ${session.access_token}`,
                 },
                 body: JSON.stringify({ audio: base64Audio }),
               }
