@@ -75,8 +75,13 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Divider */}
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #827666 20%, #827666 80%, transparent)' }} />
+      </div>
+
       {/* Benefits + CTA Section */}
-      <section className="pb-12 px-4">
+      <section className="py-12 px-4">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
           <div className="space-y-6">
