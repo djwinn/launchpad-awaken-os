@@ -9,7 +9,6 @@ import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
-
 interface ChatInterfaceProps {
   userInfo: UserInfo;
   messages: Message[];
@@ -17,8 +16,13 @@ interface ChatInterfaceProps {
   onOutputComplete: () => void;
   conversationId: string | null;
 }
-
-export function ChatInterface({ userInfo, messages, setMessages, onOutputComplete, conversationId }: ChatInterfaceProps) {
+export function ChatInterface({
+  userInfo,
+  messages,
+  setMessages,
+  onOutputComplete,
+  conversationId
+}: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -43,120 +47,129 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
       const initialMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: `Hi, my name is ${userInfo.name}. I'm here to create my mini-funnel.`,
+        content: `Hi, my name is ${userInfo.name}. I'm here to create my mini-funnel.`
       };
-
       let assistantContent = '';
       const assistantId = crypto.randomUUID();
-
       await streamChat({
-        messages: [{ role: initialMessage.role, content: initialMessage.content }],
-        onDelta: (text) => {
+        messages: [{
+          role: initialMessage.role,
+          content: initialMessage.content
+        }],
+        onDelta: text => {
           assistantContent += text;
-          setMessages([
-            initialMessage,
-            { id: assistantId, role: 'assistant', content: assistantContent },
-          ]);
+          setMessages([initialMessage, {
+            id: assistantId,
+            role: 'assistant',
+            content: assistantContent
+          }]);
         },
         onDone: async () => {
           setIsLoading(false);
-          const finalMessages: Message[] = [
-            initialMessage,
-            { id: assistantId, role: 'assistant' as const, content: assistantContent },
-          ];
+          const finalMessages: Message[] = [initialMessage, {
+            id: assistantId,
+            role: 'assistant' as const,
+            content: assistantContent
+          }];
           setMessages(finalMessages);
-          
+
           // Save to database
           if (conversationId) {
             await updateConversationMessages(conversationId, finalMessages);
           }
-          
           if (isOutputComplete(assistantContent)) {
             onOutputComplete();
           }
         },
-        onError: (error) => {
+        onError: error => {
           console.error('Chat error:', error);
           setIsLoading(false);
-          setMessages([
-            initialMessage,
-            { id: assistantId, role: 'assistant', content: 'Sorry, I encountered an error. Please refresh and try again.' },
-          ]);
-        },
+          setMessages([initialMessage, {
+            id: assistantId,
+            role: 'assistant',
+            content: 'Sorry, I encountered an error. Please refresh and try again.'
+          }]);
+        }
       });
     };
-
     startConversation();
   }, [userInfo.name, messages.length, setMessages, onOutputComplete, conversationId]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: input.trim(),
+      content: input.trim()
     };
-
     const newMessages = [...messages, userMessage];
     setInput('');
     setMessages(newMessages);
     setIsLoading(true);
-
     let assistantContent = '';
     const assistantId = crypto.randomUUID();
-
     await streamChat({
-      messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-      onDelta: (text) => {
+      messages: newMessages.map(m => ({
+        role: m.role,
+        content: m.content
+      })),
+      onDelta: text => {
         assistantContent += text;
-        setMessages((prev) => {
-          const existing = prev.find((m) => m.id === assistantId);
+        setMessages(prev => {
+          const existing = prev.find(m => m.id === assistantId);
           if (existing) {
-            return prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m));
+            return prev.map(m => m.id === assistantId ? {
+              ...m,
+              content: assistantContent
+            } : m);
           }
-          return [...prev, { id: assistantId, role: 'assistant', content: assistantContent }];
+          return [...prev, {
+            id: assistantId,
+            role: 'assistant',
+            content: assistantContent
+          }];
         });
       },
       onDone: async () => {
         setIsLoading(false);
-        
+
         // Get final messages and save
-        const finalMessages = [...newMessages, { id: assistantId, role: 'assistant' as const, content: assistantContent }];
+        const finalMessages = [...newMessages, {
+          id: assistantId,
+          role: 'assistant' as const,
+          content: assistantContent
+        }];
         setMessages(finalMessages);
-        
         if (conversationId) {
           await updateConversationMessages(conversationId, finalMessages);
         }
-        
         if (isOutputComplete(assistantContent)) {
           if (conversationId) {
-            await markConversationComplete(conversationId, { completed: true });
+            await markConversationComplete(conversationId, {
+              completed: true
+            });
           }
           setTimeout(() => onOutputComplete(), 1000);
         }
       },
-      onError: (error) => {
+      onError: error => {
         console.error('Chat error:', error);
         setIsLoading(false);
-        setMessages((prev) => [
-          ...prev,
-          { id: assistantId, role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
-        ]);
-      },
+        setMessages(prev => [...prev, {
+          id: assistantId,
+          role: 'assistant',
+          content: 'Sorry, I encountered an error. Please try again.'
+        }]);
+      }
     });
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
-
-  return (
-    <div className="flex flex-col h-screen bg-background">
+  return <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
         <img src={logo} alt="Logo" className="h-8 w-auto" />
@@ -169,33 +182,15 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
       {/* Messages */}
       <ScrollArea className="flex-1 px-4" ref={scrollRef}>
         <div className="max-w-3xl mx-auto py-6 space-y-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                'flex gap-3',
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              )}
-            >
-              {message.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          {messages.map(message => <div key={message.id} className={cn('flex gap-3', message.role === 'user' ? 'justify-end' : 'justify-start')}>
+              {message.role === 'assistant' && <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#827666]">
                   <img src={logo} alt="" className="w-5 h-5" />
-                </div>
-              )}
-              <div
-                className={cn(
-                  'rounded-2xl px-4 py-3 max-w-[85%]',
-                  message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
-                )}
-              >
+                </div>}
+              <div className={cn('rounded-2xl px-4 py-3 max-w-[85%]', message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
               </div>
-            </div>
-          ))}
-          {isLoading && messages[messages.length - 1]?.role === 'user' && (
-            <div className="flex gap-3 justify-start">
+            </div>)}
+          {isLoading && messages[messages.length - 1]?.role === 'user' && <div className="flex gap-3 justify-start">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <img src={logo} alt="" className="w-5 h-5" />
               </div>
@@ -205,8 +200,7 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
                   <span className="text-sm">Thinking...</span>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </ScrollArea>
 
@@ -214,21 +208,8 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
       <div className="border-t border-border/50 p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="min-h-[52px] max-h-32 pr-12 resize-none"
-              disabled={isLoading}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!input.trim() || isLoading}
-              className="absolute right-2 bottom-2 h-8 w-8"
-            >
+            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-12 resize-none" disabled={isLoading} />
+            <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="absolute right-2 bottom-2 h-8 w-8">
               <Send className="w-4 h-4" />
             </Button>
           </div>
@@ -237,6 +218,5 @@ export function ChatInterface({ userInfo, messages, setMessages, onOutputComplet
           </p>
         </form>
       </div>
-    </div>
-  );
+    </div>;
 }
