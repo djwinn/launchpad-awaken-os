@@ -151,7 +151,7 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Takes about 10-15 minutes • No credit card required
+          15 minutes from now, you'll have your complete funnel copy
         </p>
       </section>
     </main>
