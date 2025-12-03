@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
+import { z } from 'zod';
 
 interface LandingPageProps {
-  onStartClick: () => void;
+  onStartClick: (name: string, email: string) => void;
   className?: string;
 }
+
+const emailSchema = z.string().trim().email({ message: "Please enter a valid email address" });
 
 const benefits = [
   "Your lead magnet written and structured (not just an outline — the actual content)",
@@ -16,6 +22,29 @@ const benefits = [
 ];
 
 export function LandingPage({ onStartClick, className }: LandingPageProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: { name?: string; email?: string } = {};
+    
+    if (!name.trim()) {
+      newErrors.name = 'Please enter your name';
+    }
+    
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      newErrors.email = emailResult.error.errors[0].message;
+    }
+    
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length === 0) {
+      onStartClick(name.trim(), email.trim());
+    }
+  };
+
   return (
     <main className={`min-h-screen bg-background ${className || ''}`}>
       {/* Hero Section */}
@@ -71,17 +100,47 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
             <CardHeader className="space-y-1 pb-4">
               <CardTitle className="text-xl">Get Started</CardTitle>
               <CardDescription>
-                Create a free account to begin your guided conversation.
+                Enter your details to begin your guided conversation.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={onStartClick}
-                size="lg" 
-                className="w-full text-black font-bold bg-[#eccd8a] hover:bg-[#d4a854] rounded-full transition-colors"
-              >
-                Start Building
-              </Button>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={errors.name ? 'border-destructive' : ''}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{errors.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={errors.email ? 'border-destructive' : ''}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
+                </div>
+                <Button 
+                  type="submit"
+                  size="lg" 
+                  className="w-full text-black font-bold bg-[#eccd8a] hover:bg-[#d4a854] rounded-full transition-colors"
+                >
+                  Start Building
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>

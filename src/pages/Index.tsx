@@ -48,13 +48,9 @@ const Index = () => {
     }
   }, [user, view]);
 
-  const handleStartClick = () => {
-    if (user) {
-      // User is already logged in, start conversation
-      return;
-    }
-    // Redirect to auth
-    navigate('/auth');
+  const handleStartClick = (name: string, email: string) => {
+    // Pass name and email to auth page via URL params
+    navigate(`/auth?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`);
   };
 
   const handleOutputComplete = () => {
