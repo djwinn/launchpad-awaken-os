@@ -72,7 +72,7 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
           </p>
           
           <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in under an hour.
+            A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in less than 30 minutes.
           </p>
         </div>
       </section>
@@ -162,7 +162,7 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          15 minutes from now, you'll have your complete funnel copy
+          In less than 30 mins you'll have your complete mini funnel strategy and copy
         </p>
       </section>
     </main>
