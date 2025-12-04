@@ -14,7 +14,11 @@ interface LandingPageProps {
 const emailSchema = z.string().trim().email({
   message: "Please enter a valid email address"
 });
-const benefits = ["Your lead magnet written and structured (not just an outline — the actual content)", "Landing page copy that speaks directly to your ideal client", "10 nurture emails that build trust and book calls", "A clear, compelling offer you can explain in 30 seconds", "Everything formatted and ready to paste into your templates"];
+const benefits = [
+  { bold: "From Stranger to Subscriber", rest: "A lead magnet that actually gets downloads" },
+  { bold: "From Subscriber to Call", rest: "10 emails that build trust on autopilot" },
+  { bold: "From Call to Client", rest: "An offer that's clear, compelling, and ready to sell" }
+];
 export function LandingPage({
   onStartClick,
   className
@@ -98,7 +102,7 @@ export function LandingPage({
               }}>
                     <Check className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-foreground/90 leading-relaxed font-semibold">{benefit}</span>
+                  <span className="text-foreground/90 leading-relaxed"><strong>{benefit.bold}:</strong> {benefit.rest}</span>
                 </li>)}
             </ul>
           </div>
