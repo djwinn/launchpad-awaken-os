@@ -29,39 +29,56 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for error in URL hash (from failed password reset links)
+    // Check for error or recovery in URL hash
     const hash = window.location.hash;
-    if (hash.includes('error=')) {
+    if (hash) {
       const params = new URLSearchParams(hash.substring(1));
-      const errorDescription = params.get('error_description');
-      if (errorDescription) {
-        toast({
-          title: "Link expired",
-          description: "The reset link has expired. Please request a new one.",
-          variant: "destructive",
-        });
-        setMode('forgot');
-        // Clean up the URL
-        window.history.replaceState(null, '', window.location.pathname);
+      
+      // Check for error (from failed/expired password reset links)
+      if (hash.includes('error=')) {
+        const errorDescription = params.get('error_description');
+        if (errorDescription) {
+          toast({
+            title: "Link expired",
+            description: "The reset link has expired. Please request a new one.",
+            variant: "destructive",
+          });
+          setMode('forgot');
+          window.history.replaceState(null, '', window.location.pathname);
+          return;
+        }
+      }
+      
+      // Check for password recovery type in URL hash
+      const type = params.get('type');
+      if (type === 'recovery') {
+        setMode('reset');
       }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMode('reset');
-      } else if (session?.user) {
+      } else if (session?.user && mode !== 'reset') {
         navigate('/');
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        navigate('/');
+      // Don't redirect if in reset mode
+      if (session?.user && mode !== 'reset') {
+        // Check if this is a recovery session
+        const hash = window.location.hash;
+        if (hash.includes('type=recovery')) {
+          setMode('reset');
+        } else {
+          navigate('/');
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate, toast, mode]);
 
   const validate = () => {
     const newErrors: { password?: string } = {};
@@ -374,11 +391,21 @@ const Auth = () => {
               )}
 
               {isSignupFlow && (
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('login');
+                      setErrors({});
+                    }}
+                    className="text-sm text-muted-foreground hover:text-primary underline block w-full"
+                  >
+                    Already have an account? Sign in
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigate('/')}
-                    className="text-sm text-muted-foreground hover:text-primary underline"
+                    className="text-sm text-muted-foreground hover:text-primary underline block w-full"
                   >
                     Go back
                   </button>
