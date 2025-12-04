@@ -52,9 +52,9 @@ export function LandingPage({
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <div className="w-full max-w-4xl mx-auto mb-10 flex items-center justify-center gap-6">
             <div className="hidden md:block flex-shrink-0">
-              <img src={awakenLogo} alt="Awaken OS Logo" className="w-48" />
+              <img src={awakenLogo} alt="Awaken OS Logo" className="w-72" />
             </div>
-            <div className="flex-1 max-w-2xl">
+            <div className="flex-1 max-w-md">
               <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
                 <iframe src="https://www.youtube.com/embed/ECGHeaz8qFQ" title="Introduction Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
               </div>
