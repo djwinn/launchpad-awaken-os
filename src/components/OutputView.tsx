@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Copy, Download, RotateCcw, Check, MessageSquare, Link, FileText, Globe, Heart, Calendar, Package, Mail, ClipboardList, Send } from 'lucide-react';
+import { Copy, Download, Check, MessageSquare, Link, FileText, Globe, Heart, Calendar, Package, Mail, ClipboardList, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { parseOutputDocument, type ParsedOutput } from '@/lib/output-parser';
 import { MarkdownContent } from '@/components/MarkdownContent';
@@ -268,14 +268,6 @@ export function OutputView({ userInfo, messages, onStartOver, onBackToChat }: Ou
         )}
 
         {parsed.emails.length > 0 && <EmailAccordion emails={parsed.emails} />}
-
-        {/* Actions */}
-        <div className="flex justify-center pt-6">
-          <Button variant="outline" onClick={onStartOver} className="gap-2">
-            <RotateCcw className="w-4 h-4" />
-            Start Over
-          </Button>
-        </div>
       </main>
     </div>
   );
