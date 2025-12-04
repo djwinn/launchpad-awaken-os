@@ -49,7 +49,7 @@ export function LandingPage({
     }
   };
   return <main className={`min-h-screen ${className || ''}`} style={{
-    backgroundColor: '#aea397'
+    backgroundColor: '#827666'
   }}>
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
