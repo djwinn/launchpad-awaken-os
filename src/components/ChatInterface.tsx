@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
+import botIcon from '@/assets/bot-icon.png';
 
 interface ChatInterfaceProps {
   userInfo: UserInfo;
@@ -307,16 +308,16 @@ export function ChatInterface({
       <ScrollArea className="flex-1 px-4" ref={scrollRef}>
         <div className="max-w-3xl mx-auto py-6 space-y-6">
           {messages.map(message => <div key={message.id} className={cn('flex gap-3', message.role === 'user' ? 'justify-end' : 'justify-start')}>
-              {message.role === 'assistant' && <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#827666]">
-                  <img src={logo} alt="" className="w-5 h-5" />
+              {message.role === 'assistant' && <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src={botIcon} alt="" className="w-8 h-8 object-cover" />
                 </div>}
               <div className={cn('rounded-2xl px-4 py-3 max-w-[85%]', message.role === 'user' ? 'bg-[#827666] text-white' : 'bg-muted text-foreground')}>
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
               </div>
             </div>)}
           {isLoading && messages[messages.length - 1]?.role === 'user' && <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <img src={logo} alt="" className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img src={botIcon} alt="" className="w-8 h-8 object-cover" />
               </div>
               <div className="bg-muted rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2 text-muted-foreground">
