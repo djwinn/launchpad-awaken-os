@@ -68,7 +68,7 @@ export function LandingPage({
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white">
             Your Entire Client-Getting System,
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2 text-white">
+          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2" style={{ color: '#d4d4d4' }}>
             Built in One Conversation
           </p>
           
@@ -91,7 +91,7 @@ export function LandingPage({
       <section className="py-12 px-4">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
-          <div className="space-y-6 bg-white rounded-xl p-6 shadow-md">
+          <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               What You'll Get:
             </h2>
@@ -108,11 +108,11 @@ export function LandingPage({
           </div>
 
           {/* CTA Card */}
-          <Card className="border-border/50 shadow-lg">
+          <Card className="border-border/50 shadow-lg h-full">
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-xl">Get Started</CardTitle>
+              <CardTitle className="text-xl">Start Building</CardTitle>
               <CardDescription>
-                Enter your details to begin your guided conversation.
+                No writing. No guesswork. Just answer questions about your coaching.
               </CardDescription>
             </CardHeader>
             <CardContent>
