@@ -6,7 +6,7 @@ import { OutputView } from '@/components/OutputView';
 import { useAuth } from '@/hooks/useAuth';
 import { findIncompleteConversation, createConversation } from '@/lib/conversations';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, FileText } from 'lucide-react';
+import { LogOut, Loader2, FileText, Plus } from 'lucide-react';
 import type { Message, UserInfo, AppView } from '@/types/chat';
 import { Link } from 'react-router-dom';
 
@@ -118,6 +118,10 @@ const Index = () => {
     return (
       <div className="relative">
         <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleStartOver}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Chat
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link to="/outputs">
               <FileText className="h-4 w-4 mr-2" />
@@ -142,6 +146,10 @@ const Index = () => {
   return (
     <div className="relative">
       <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button variant="outline" size="sm" onClick={handleStartOver}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Chat
+        </Button>
         <Button variant="outline" size="sm" asChild>
           <Link to="/outputs">
             <FileText className="h-4 w-4 mr-2" />
