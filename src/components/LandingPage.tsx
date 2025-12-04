@@ -15,9 +15,12 @@ const emailSchema = z.string().trim().email({
   message: "Please enter a valid email address"
 });
 const benefits = [
-  { bold: "From Stranger to Subscriber", rest: "A lead magnet that actually gets downloads" },
-  { bold: "From Subscriber to Call", rest: "10 emails that build trust on autopilot" },
-  { bold: "From Call to Client", rest: "An offer that's clear, compelling, and ready to sell" }
+  { bold: "Lead magnet", rest: "Builds your list while you sleep — full content, not just an outline" },
+  { bold: "Landing page", rest: "Copy so specific your ideal client thinks \"this is exactly me\"" },
+  { bold: "10 nurture emails", rest: "Turn cold leads into booked calls — without you writing a word" },
+  { bold: "Your offer", rest: "Pitch it in 30 seconds and actually get a yes" },
+  { bold: "Booking page", rest: "Pre-sells the call before they even show up" },
+  { bold: "Ready to publish", rest: "Paste straight into your AwakenOS templates — go live the same day" }
 ];
 export function LandingPage({
   onStartClick,
@@ -93,7 +96,7 @@ export function LandingPage({
           {/* Benefits */}
           <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-              What You'll Get:
+              What You'll Walk Away With:
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => <li key={index} className="flex items-start gap-3">
