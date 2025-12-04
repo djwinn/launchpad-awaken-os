@@ -6,8 +6,9 @@ import { OutputView } from '@/components/OutputView';
 import { useAuth } from '@/hooks/useAuth';
 import { findIncompleteConversation, createConversation } from '@/lib/conversations';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2 } from 'lucide-react';
+import { LogOut, Loader2, FileText } from 'lucide-react';
 import type { Message, UserInfo, AppView } from '@/types/chat';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -116,7 +117,13 @@ const Index = () => {
   if (view === 'output') {
     return (
       <div className="relative">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/outputs">
+              <FileText className="h-4 w-4 mr-2" />
+              My Outputs
+            </Link>
+          </Button>
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
@@ -134,7 +141,13 @@ const Index = () => {
 
   return (
     <div className="relative">
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/outputs">
+            <FileText className="h-4 w-4 mr-2" />
+            My Outputs
+          </Link>
+        </Button>
         <Button variant="outline" size="sm" onClick={handleSignOut}>
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out

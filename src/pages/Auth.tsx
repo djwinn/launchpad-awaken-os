@@ -28,6 +28,12 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Check for recovery mode from URL hash on mount (before any redirects)
+  const [isRecoveryMode, setIsRecoveryMode] = useState(() => {
+    const hash = window.location.hash;
+    return hash.includes('type=recovery');
+  });
+
   useEffect(() => {
     // Check for error or recovery in URL hash
     const hash = window.location.hash;
@@ -44,6 +50,7 @@ const Auth = () => {
             variant: "destructive",
           });
           setMode('forgot');
+          setIsRecoveryMode(false);
           window.history.replaceState(null, '', window.location.pathname);
           return;
         }
@@ -53,32 +60,36 @@ const Auth = () => {
       const type = params.get('type');
       if (type === 'recovery') {
         setMode('reset');
+        setIsRecoveryMode(true);
       }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMode('reset');
-      } else if (session?.user && mode !== 'reset') {
+        setIsRecoveryMode(true);
+      } else if (session?.user && !isRecoveryMode && mode !== 'reset') {
         navigate('/');
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // Don't redirect if in reset mode
-      if (session?.user && mode !== 'reset') {
-        // Check if this is a recovery session
-        const hash = window.location.hash;
-        if (hash.includes('type=recovery')) {
+      // Don't redirect if in recovery mode
+      const hash = window.location.hash;
+      const isRecovery = hash.includes('type=recovery');
+      
+      if (session?.user) {
+        if (isRecovery) {
           setMode('reset');
-        } else {
+          setIsRecoveryMode(true);
+        } else if (!isRecoveryMode && mode !== 'reset') {
           navigate('/');
         }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, mode]);
+  }, [navigate, toast, mode, isRecoveryMode]);
 
   const validate = () => {
     const newErrors: { password?: string } = {};
