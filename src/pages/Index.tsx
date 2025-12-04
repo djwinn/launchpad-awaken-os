@@ -95,7 +95,7 @@ const Index = () => {
 
   // Show landing page for unauthenticated users
   if (!user && !loading) {
-    return <LandingPage onStartClick={handleStartClick} className="bg-[#827666]" />;
+    return <LandingPage onStartClick={handleStartClick} className="bg-[#6c6254]" />;
   }
 
   // Show loading while checking auth or initializing conversation

@@ -70,7 +70,7 @@ export function LandingPage({
           
           <p style={{
           color: '#f5f5f0'
-        }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed text-[#c9c4c4]">
+        }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed text-[#b8b6b6]">
             A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in less than 30 minutes.
           </p>
         </div>
