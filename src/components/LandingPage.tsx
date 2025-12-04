@@ -48,7 +48,7 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
   };
 
   return (
-    <main className={`min-h-screen bg-background ${className || ''}`}>
+    <main className={`min-h-screen ${className || ''}`} style={{ backgroundColor: '#aea397' }}>
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
@@ -64,14 +64,14 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
             </div>
           </div>
           
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white">
             Your Entire Client-Getting System,
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight text-foreground leading-tight italic font-semibold -mt-2">
+          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2 text-white">
             Built in One Conversation
           </p>
           
-          <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed" style={{ color: '#f5f5f0' }}>
             A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in less than 30 minutes.
           </p>
         </div>
@@ -86,15 +86,15 @@ export function LandingPage({ onStartClick, className }: LandingPageProps) {
       <section className="py-12 px-4">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
-          <div className="space-y-6">
-            <h2 className="text-2xl md:text-3xl font-semibold text-foreground">
+          <div className="space-y-6 bg-white rounded-xl p-6 shadow-md">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               What You'll Get:
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#1fb14c]/10 flex items-center justify-center mt-0.5">
-                    <Check className="w-4 h-4" style={{ color: '#1fb14c' }} />
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: '#1fb14c' }}>
+                    <Check className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-foreground/90 leading-relaxed font-semibold">{benefit}</span>
                 </li>
