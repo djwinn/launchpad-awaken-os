@@ -68,13 +68,13 @@ export function LandingPage({
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white">
             Your Entire Client-Getting System,
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2" style={{ color: '#d4d4d4' }}>
+          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2 text-white">
             Built in One Conversation
           </p>
           
           <p style={{
-          color: '#f5f5f0'
-        }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed text-[#b8b6b6]">
+          color: '#d4d4d4'
+        }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in less than 30 minutes.
           </p>
         </div>
@@ -108,9 +108,9 @@ export function LandingPage({
           </div>
 
           {/* CTA Card */}
-          <Card className="border-border/50 shadow-lg h-full">
+          <Card className="border-border/50 shadow-lg h-full rounded-xl">
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-xl">Start Building</CardTitle>
+              <CardTitle className="text-2xl md:text-3xl font-bold">Start Building</CardTitle>
               <CardDescription>
                 No writing. No guesswork. Just answer questions about your coaching.
               </CardDescription>
