@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check } from 'lucide-react';
 import { z } from 'zod';
+import awakenLogo from '@/assets/awaken-logo-white.png';
 interface LandingPageProps {
   onStartClick: (name: string, email: string) => void;
   className?: string;
@@ -49,9 +50,14 @@ export function LandingPage({
       {/* Hero Section */}
       <section className="pt-6 md:pt-10 pb-8 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
-          <div className="w-full max-w-2xl mx-auto mb-10">
-            <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
-              <iframe src="https://www.youtube.com/embed/ECGHeaz8qFQ" title="Introduction Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
+          <div className="w-full max-w-4xl mx-auto mb-10 flex items-center justify-center gap-6">
+            <div className="hidden md:block flex-shrink-0">
+              <img src={awakenLogo} alt="Awaken OS Logo" className="w-48" />
+            </div>
+            <div className="flex-1 max-w-2xl">
+              <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
+                <iframe src="https://www.youtube.com/embed/ECGHeaz8qFQ" title="Introduction Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
+              </div>
             </div>
           </div>
           
