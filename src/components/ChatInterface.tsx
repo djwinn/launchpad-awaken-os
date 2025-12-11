@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Mic, MicOff } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
 import { isOutputComplete } from '@/lib/output-parser';
@@ -33,8 +33,10 @@ export function ChatInterface({
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -146,6 +148,65 @@ export function ChatInterface({
       startRecording();
     }
   }, [isRecording, startRecording, stopRecording]);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input so the same file can be selected again
+    e.target.value = '';
+
+    setIsUploading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.text) {
+        const prefix = `[Content from ${data.fileName}]:\n\n`;
+        setInput(prev => {
+          const trimmed = prev.trim();
+          return trimmed ? trimmed + '\n\n' + prefix + data.text : prefix + data.text;
+        });
+        toast({
+          title: "Document uploaded",
+          description: `Content from "${data.fileName}" has been added to your message.`,
+        });
+      }
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Could not process the document. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  }, [toast]);
 
   // Auto-scroll to bottom - triggers on messages change and loading state
   useEffect(() => {
@@ -333,8 +394,30 @@ export function ChatInterface({
       <div className="border-t border-border/50 p-4">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
           <div className="relative">
-            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-24 resize-none overflow-y-auto" disabled={isLoading} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.md,.csv,.doc,.docx"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." className="min-h-[52px] max-h-32 pr-32 resize-none overflow-y-auto" disabled={isLoading} />
             <div className="absolute right-2 bottom-2 flex gap-1">
+              <Button
+                type="button"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isUploading}
+                className={cn(
+                  "h-8 w-8 transition-all",
+                  isUploading
+                    ? "bg-amber-500 text-white"
+                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                )}
+                title={isUploading ? "Processing document..." : "Upload a document (.txt, .md, .csv, .doc, .docx)"}
+              >
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+              </Button>
               <Button
                 type="button"
                 size="icon"
@@ -358,7 +441,7 @@ export function ChatInterface({
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            💡 Tip: Use the microphone to speak your answers in detail, or paste in existing materials you already have.
+            💡 Tip: Upload documents, use the microphone, or paste existing materials to provide richer context.
           </p>
         </form>
       </div>
