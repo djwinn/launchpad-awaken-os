@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.transcribe]
 verify_jwt = true
+
+[functions.parse-document]
+verify_jwt = true
