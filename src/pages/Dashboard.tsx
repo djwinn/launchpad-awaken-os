@@ -18,6 +18,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [hasIncompleteChat, setHasIncompleteChat] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -43,6 +44,16 @@ const Dashboard = () => {
           setProgress(userProgress);
         }
       }
+
+      // Check for incomplete conversation
+      const { data: incomplete } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('user_email', user.email)
+        .eq('completed', false)
+        .limit(1);
+
+      setHasIncompleteChat((incomplete?.length || 0) > 0);
       setLoadingProgress(false);
     };
 
@@ -143,9 +154,9 @@ const Dashboard = () => {
               subtitle="Build funnels that attract and convert"
               description="Build landing pages, lead magnets, and email sequences that bring the right people to you."
               timeEstimate="20-30 minutes per funnel"
-              status={hasFunnels ? 'complete' : 'not-started'}
-              buttonLabel="Create New Funnel"
-              onClick={() => navigate('/funnel-builder')}
+              status={hasFunnels ? 'complete' : hasIncompleteChat ? 'in-progress' : 'not-started'}
+              buttonLabel={hasIncompleteChat ? "Continue Chat" : "Create New Funnel"}
+              onClick={() => navigate(hasIncompleteChat ? '/' : '/funnel-builder')}
               secondaryButtonLabel={hasFunnels ? "View Previous" : undefined}
               onSecondaryClick={hasFunnels ? () => navigate('/outputs') : undefined}
             />
