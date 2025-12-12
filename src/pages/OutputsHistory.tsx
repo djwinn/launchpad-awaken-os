@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, FileText, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileText, Home, Loader2, MessageSquare } from 'lucide-react';
 import { OutputView } from '@/components/OutputView';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
@@ -111,10 +111,16 @@ const OutputsHistory = () => {
             <img src={logo} alt="Logo" className="h-10" />
             <h1 className="text-2xl font-bold">Your Outputs</h1>
           </div>
-          <Button variant="outline" onClick={() => navigate('/')}>
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Back to Chat
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate('/dashboard')}>
+              <Home className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/')}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Back to Chat
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
