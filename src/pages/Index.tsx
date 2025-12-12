@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LandingPage } from '@/components/LandingPage';
 import { ChatInterface } from '@/components/ChatInterface';
 import { OutputView } from '@/components/OutputView';
@@ -16,7 +16,9 @@ const Index = () => {
     signOut
   } = useAuth();
   const navigate = useNavigate();
-  const [view, setView] = useState<AppView>('landing');
+  const [searchParams] = useSearchParams();
+  const continueChat = searchParams.get('continue') === 'true';
+  const [view, setView] = useState<AppView>(continueChat ? 'chat' : 'landing');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -64,12 +66,12 @@ const Index = () => {
     }
   }, [user, view, loading]);
 
-  // Redirect authenticated users to dashboard unless they're on funnel-builder route
+  // Redirect authenticated users to dashboard unless they're continuing chat
   useEffect(() => {
-    if (user && !loading && view === 'landing' && window.location.pathname === '/') {
+    if (user && !loading && view === 'landing' && window.location.pathname === '/' && !continueChat) {
       navigate('/dashboard');
     }
-  }, [user, loading, view, navigate]);
+  }, [user, loading, view, navigate, continueChat]);
 
   const handleStartClick = (name: string, email: string) => {
     // Pass name and email to auth page via URL params
