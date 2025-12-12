@@ -69,7 +69,7 @@ const Auth = () => {
         setMode('reset');
         setIsRecoveryMode(true);
       } else if (session?.user && !isRecoveryMode && mode !== 'reset') {
-        navigate('/');
+        navigate('/dashboard');
       }
     });
 
@@ -83,7 +83,7 @@ const Auth = () => {
           setMode('reset');
           setIsRecoveryMode(true);
         } else if (!isRecoveryMode && mode !== 'reset') {
-          navigate('/');
+          navigate('/dashboard');
         }
       }
     });
@@ -157,7 +157,7 @@ const Auth = () => {
           title: "Password updated",
           description: "Your password has been reset successfully.",
         });
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({
