@@ -314,11 +314,29 @@ After generating, say: "Review it above and make any edits you need. When you're
       const assistantMessage = response.data?.message || response.data?.choices?.[0]?.message?.content || '';
       setChatMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
       
-      // Check if contract was generated
-      if (itemId === 'contract_prepared' && assistantMessage.toLowerCase().includes("here's your contract")) {
-        const contractMatch = assistantMessage.split(/here'?s your contract text:?/i)[1];
-        if (contractMatch) {
-          setContractText(contractMatch.trim());
+      // Check if contract was generated - extract just the contract content
+      if (itemId === 'contract_prepared') {
+        // Look for contract markers - the contract starts with "## COACHING AGREEMENT" or similar
+        const contractStartMatch = assistantMessage.match(/##?\s*COACHING AGREEMENT/i);
+        if (contractStartMatch) {
+          const startIndex = assistantMessage.indexOf(contractStartMatch[0]);
+          let contractContent = assistantMessage.substring(startIndex);
+          
+          // Remove any trailing conversational content after the contract
+          // Contract ends with signature lines, so look for common post-contract phrases
+          const endPhrases = [
+            /\n\n(?:review it|when you're|click|let me know|feel free|i hope|this covers|if you need|happy to|please review)/i,
+            /\n\n(?:here's|that's|this is|the above)/i
+          ];
+          
+          for (const phrase of endPhrases) {
+            const match = contractContent.match(phrase);
+            if (match && match.index) {
+              contractContent = contractContent.substring(0, match.index);
+            }
+          }
+          
+          setContractText(contractContent.trim());
         }
       }
     } catch (error) {
