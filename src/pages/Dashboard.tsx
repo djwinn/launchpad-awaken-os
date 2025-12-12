@@ -140,12 +140,14 @@ const Dashboard = () => {
             <PhaseCard
               icon={Magnet}
               title="Client Magnet"
-              subtitle="Attract and convert on autopilot"
+              subtitle="Build funnels that attract and convert"
               description="Build landing pages, lead magnets, and email sequences that bring the right people to you."
               timeEstimate="20-30 minutes per funnel"
               status={hasFunnels ? 'complete' : 'not-started'}
-              buttonLabel={phase3Button}
-              onClick={() => hasFunnels ? navigate('/outputs') : navigate('/funnel-builder')}
+              buttonLabel="Create New Funnel"
+              onClick={() => navigate('/funnel-builder')}
+              secondaryButtonLabel={hasFunnels ? "View Previous" : undefined}
+              onSecondaryClick={hasFunnels ? () => navigate('/outputs') : undefined}
             />
           </div>
 
