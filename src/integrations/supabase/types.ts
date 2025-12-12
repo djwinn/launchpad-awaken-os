@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          created_at: string
+          funnels_created: number
+          id: string
+          phase1_complete: boolean
+          phase1_progress: number
+          phase2_complete: boolean
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          funnels_created?: number
+          id?: string
+          phase1_complete?: boolean
+          phase1_progress?: number
+          phase2_complete?: boolean
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          funnels_created?: number
+          id?: string
+          phase1_complete?: boolean
+          phase1_progress?: number
+          phase2_complete?: boolean
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

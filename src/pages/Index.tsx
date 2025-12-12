@@ -63,6 +63,14 @@ const Index = () => {
       initConversation();
     }
   }, [user, view, loading]);
+
+  // Redirect authenticated users to dashboard unless they're on funnel-builder route
+  useEffect(() => {
+    if (user && !loading && view === 'landing' && window.location.pathname === '/') {
+      navigate('/dashboard');
+    }
+  }, [user, loading, view, navigate]);
+
   const handleStartClick = (name: string, email: string) => {
     // Pass name and email to auth page via URL params
     navigate(`/auth?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`);
