@@ -58,6 +58,7 @@ export type Database = {
           created_at: string
           funnels_created: number
           id: string
+          location_id: string | null
           payments_connected: boolean
           phase1_complete: boolean
           phase1_progress: number
@@ -73,6 +74,7 @@ export type Database = {
           created_at?: string
           funnels_created?: number
           id?: string
+          location_id?: string | null
           payments_connected?: boolean
           phase1_complete?: boolean
           phase1_progress?: number
@@ -88,6 +90,7 @@ export type Database = {
           created_at?: string
           funnels_created?: number
           id?: string
+          location_id?: string | null
           payments_connected?: boolean
           phase1_complete?: boolean
           phase1_progress?: number

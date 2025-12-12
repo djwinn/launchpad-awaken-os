@@ -11,11 +11,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
+import { LocationIdModal } from '@/components/setup/LocationIdModal';
 
 interface SetupProgress {
   profile_complete: boolean;
@@ -23,6 +24,7 @@ interface SetupProgress {
   booking_page_created: boolean;
   contract_prepared: boolean;
   payments_connected: boolean;
+  location_id: string | null;
 }
 
 const setupItems = [
@@ -79,10 +81,13 @@ const Setup = () => {
     booking_page_created: false,
     contract_prepared: false,
     payments_connected: false,
+    location_id: null,
   });
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [hasShownLocationPrompt, setHasShownLocationPrompt] = useState(false);
 
   useEffect(() => {
     if (!user?.email || loading) return;
@@ -90,7 +95,7 @@ const Setup = () => {
     const loadProgress = async () => {
       const { data, error } = await supabase
         .from('user_progress')
-        .select('profile_complete, calendar_connected, booking_page_created, contract_prepared, payments_connected')
+        .select('profile_complete, calendar_connected, booking_page_created, contract_prepared, payments_connected, location_id')
         .eq('user_email', user.email)
         .maybeSingle();
 
@@ -101,15 +106,32 @@ const Setup = () => {
           booking_page_created: data.booking_page_created ?? false,
           contract_prepared: data.contract_prepared ?? false,
           payments_connected: data.payments_connected ?? false,
+          location_id: data.location_id ?? null,
         });
+        
+        // Show location modal on first visit if no location_id
+        if (!data.location_id && !hasShownLocationPrompt) {
+          setShowLocationModal(true);
+          setHasShownLocationPrompt(true);
+        }
+      } else if (!data && !hasShownLocationPrompt) {
+        // New user, show modal
+        setShowLocationModal(true);
+        setHasShownLocationPrompt(true);
       }
       setLoadingData(false);
     };
 
     loadProgress();
-  }, [user, loading]);
+  }, [user, loading, hasShownLocationPrompt]);
 
-  const completedCount = Object.values(progress).filter(Boolean).length;
+  const completedCount = [
+    progress.profile_complete,
+    progress.calendar_connected,
+    progress.booking_page_created,
+    progress.contract_prepared,
+    progress.payments_connected,
+  ].filter(Boolean).length;
   const progressPercentage = 20 + (completedCount * 16); // Start at 20%, each item adds 16%
   const allComplete = completedCount === 5;
 
@@ -117,12 +139,18 @@ const Setup = () => {
     if (!user?.email) return;
 
     const newProgress = { ...progress, [itemId]: true };
-    setProgress(newProgress);
+    setProgress(newProgress as SetupProgress);
     setActiveItem(null);
 
     // Update database
-    const completedCount = Object.values(newProgress).filter(Boolean).length;
-    const phase1Complete = completedCount === 5;
+    const newCompletedCount = [
+      newProgress.profile_complete,
+      newProgress.calendar_connected,
+      newProgress.booking_page_created,
+      newProgress.contract_prepared,
+      newProgress.payments_connected,
+    ].filter(Boolean).length;
+    const phase1Complete = newCompletedCount === 5;
 
     await supabase
       .from('user_progress')
@@ -146,6 +174,25 @@ const Setup = () => {
         setShowCelebration(true);
       }, 3000);
     }
+  };
+
+  const handleSaveLocationId = async (locationId: string) => {
+    if (!user?.email) return;
+
+    await supabase
+      .from('user_progress')
+      .upsert({
+        user_email: user.email,
+        location_id: locationId,
+      }, { onConflict: 'user_email' });
+
+    setProgress(prev => ({ ...prev, location_id: locationId }));
+    setShowLocationModal(false);
+    
+    toast({
+      title: 'Location ID saved!',
+      description: 'Links will now take you directly to the right pages in AwakenOS.',
+    });
   };
 
   const getProgressMessage = () => {
@@ -216,10 +263,31 @@ const Setup = () => {
           <p className="text-sm text-muted-foreground">{getProgressMessage()}</p>
         </div>
 
+        {/* Location ID Section */}
+        <div className="mb-6 p-4 bg-muted/50 rounded-lg flex items-center justify-between">
+          <div>
+            <span className="text-sm font-medium text-foreground">AwakenOS Location ID: </span>
+            {progress.location_id ? (
+              <code className="text-sm font-mono text-muted-foreground">{progress.location_id.slice(0, 8)}...</code>
+            ) : (
+              <span className="text-sm text-muted-foreground">Not set</span>
+            )}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowLocationModal(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Pencil className="w-3 h-3 mr-1" />
+            {progress.location_id ? 'Edit' : 'Add'}
+          </Button>
+        </div>
+
         {/* Checklist */}
         <div className="space-y-4">
           {setupItems.map((item) => {
-            const isComplete = progress[item.id as keyof SetupProgress];
+            const isComplete = Boolean(progress[item.id as keyof Omit<SetupProgress, 'location_id'>]);
             const Icon = item.icon;
 
             return (
@@ -294,9 +362,18 @@ const Setup = () => {
       {/* Setup Item Modal */}
       <SetupItemModal
         itemId={activeItem}
-        isComplete={activeItem ? progress[activeItem as keyof SetupProgress] : false}
+        isComplete={activeItem && activeItem !== 'location_id' ? Boolean(progress[activeItem as keyof Omit<SetupProgress, 'location_id'>]) : false}
         onClose={() => setActiveItem(null)}
         onComplete={handleItemComplete}
+        locationId={progress.location_id}
+      />
+
+      {/* Location ID Modal */}
+      <LocationIdModal
+        open={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onSave={handleSaveLocationId}
+        currentLocationId={progress.location_id || undefined}
       />
 
       {/* Celebration Modal */}
