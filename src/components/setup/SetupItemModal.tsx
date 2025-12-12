@@ -474,17 +474,8 @@ After generating, say: "Review it above and make any edits you need. When you're
           {/* Contract Output (for item 4) */}
           {config.hasContractOutput && contractText && (
             <div className="px-6 py-4 border-b border-border">
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3">
                 <span className="text-sm font-medium text-foreground">Your Coaching Agreement</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCopyContract}
-                  disabled={!disclaimerAccepted}
-                >
-                  <Copy className="w-3 h-3 mr-1" />
-                  Copy Contract
-                </Button>
               </div>
               <div className="bg-muted rounded-lg p-4 max-h-[250px] overflow-y-auto">
                 <MarkdownContent content={contractText} className="text-xs" />
@@ -502,6 +493,19 @@ After generating, say: "Review it above and make any edits you need. When you're
                   />
                   <span className="text-xs text-foreground">I understand this is a template and I should seek legal advice</span>
                 </label>
+              </div>
+              
+              {/* Copy Button */}
+              <div className="mt-4">
+                <Button 
+                  variant={disclaimerAccepted ? "default" : "outline"}
+                  className="w-full"
+                  onClick={handleCopyContract}
+                  disabled={!disclaimerAccepted}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  {disclaimerAccepted ? "Copy Contract" : "Accept disclaimer to copy"}
+                </Button>
               </div>
             </div>
           )}
