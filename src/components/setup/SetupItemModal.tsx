@@ -17,6 +17,7 @@ import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, Chevro
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { MarkdownContent } from '@/components/MarkdownContent';
 
 interface SetupItemModalProps {
   itemId: string | null;
@@ -114,21 +115,22 @@ const itemConfigs: Record<string, ItemConfig> = {
     title: 'Prepare Your Contract',
     description: 'Have a professional agreement ready to send when clients are ready to work with you.',
     icon: FileText,
-    time: '~5 min',
+    time: '~4 min',
     videoCaption: 'Watch: Setting up contracts in AwakenOS',
     instructions: [
-      'Use the AI chat below to generate your contract',
-      'Copy the contract text once generated',
+      'Answer the questions in the AI chat below (about 7 quick questions)',
+      'Review the generated contract and make any edits',
+      'Click "Copy Contract" to copy the text',
       'Click the button to open AwakenOS',
       'Go to Payments → Documents & Contracts → Templates',
       'Create a new template and paste your contract',
       'Save the template',
-      'Come back here and click "I\'ve Completed This"',
+      'Come back here and confirm completion',
     ],
     completionMessage: 'Contract template ready! You can now send professional agreements to clients with one click.',
     hasAiChat: true,
     hasContractOutput: true,
-    aiOpeningMessage: "Let's prepare your coaching contract. I'll ask a few questions, then give you the text to paste into AwakenOS. What type of coaching do you offer?",
+    aiOpeningMessage: "Let's create your coaching agreement. I'll ask a few questions, then generate a professional contract you can paste into AwakenOS. This takes about 3-4 minutes.\n\nFirst question: What type of coaching do you offer? (e.g., life coaching, health coaching, business coaching, relationship coaching)",
     awakenPath: '/payments/proposals-estimates',
   },
   payments_connected: {
@@ -234,11 +236,67 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete, locati
 2. How long sessions should be (suggest 30 minutes)
 3. Meeting type (Zoom, Google Meet, or phone)
 After gathering these, summarize their choices and tell them they're ready to create it in AwakenOS.`
-        : `You are a helpful assistant guiding a coach through preparing their coaching contract. Be warm, direct, and keep responses under 60 words. Guide them through:
-1. What type of coaching they offer
-2. Their typical package structure (e.g., 6 sessions over 3 months)
-3. Their cancellation policy (e.g., 24 hours notice)
-After gathering all info, generate a professional but friendly coaching agreement contract and say "Here's your contract text:" followed by the full contract text they can copy.`;
+        : `You are a warm, helpful assistant creating a professional coaching agreement. Ask ONE question at a time, be concise (under 50 words per response). Follow this flow:
+
+QUESTIONS TO ASK (one at a time):
+1. What type of coaching do you offer? (already asked in opening)
+2. What's your typical package structure? (e.g., "6 sessions over 3 months", "Weekly sessions for 8 weeks", "Monthly retainer")
+3. How long are your sessions and how are they delivered? (e.g., "60-minute Zoom calls")
+4. What's your cancellation/rescheduling policy? (Most coaches require 24-48 hours notice)
+5. What's your refund policy? (Options: no refunds once begun, pro-rated for unused, full refund within 7 days)
+6. Where is your business based? (Country and state/province for governing law)
+7. Anything else to include? (confidentiality, recording permissions, materials provided — or "that's everything")
+
+After ALL questions answered, generate the contract with this EXACT format and say "Here's your contract text:":
+
+## COACHING AGREEMENT
+
+**Between:** [Coach - use placeholder]
+**And:** [Client Name - placeholder]
+**Effective Date:** [Date - placeholder]
+
+### 1. SERVICES
+[Coach] agrees to provide [coaching type] coaching services consisting of [package structure and session details].
+
+### 2. INVESTMENT & PAYMENT
+Investment: $____ (placeholder for them to fill)
+Payment is due [based on their structure].
+
+### 3. SCHEDULING & CANCELLATION
+Sessions are scheduled by mutual agreement. Client must provide at least [their policy] notice to cancel or reschedule. Late cancellations or no-shows [consequence from their policy].
+
+### 4. REFUND POLICY
+[Their refund terms]
+
+### 5. CONFIDENTIALITY
+Both parties agree to keep all information shared during coaching sessions confidential, except as required by law or where there is risk of harm to self or others.
+
+### 6. WHAT COACHING IS AND ISN'T
+Coaching is a collaborative process focused on personal and/or professional development. The Coach is not acting as a therapist, counsellor, medical professional, or legal/financial advisor. Coaching does not replace professional mental health treatment, medical care, or legal/financial advice.
+
+The Client is responsible for their own decisions and actions. Results are not guaranteed and depend on the Client's commitment and effort.
+
+### 7. INTELLECTUAL PROPERTY
+Any materials, worksheets, or resources provided by the Coach remain the intellectual property of the Coach and are for the Client's personal use only.
+
+### 8. TERMINATION
+Either party may terminate this agreement with 14 days written notice. [Apply their refund policy]
+
+### 9. LIMITATION OF LIABILITY
+The Coach's liability is limited to the fees paid for coaching services. The Coach is not liable for any indirect, consequential, or incidental damages.
+
+### 10. GOVERNING LAW
+This agreement shall be governed by the laws of [their location].
+
+### 11. AGREEMENT
+By signing below, both parties agree to the terms of this coaching agreement.
+
+**Coach Signature:** ___________________ **Date:** ________
+**Client Signature:** ___________________ **Date:** ________
+
+---
+
+After generating, say: "Review it above and make any edits you need. When you're happy with it, click 'Copy Contract' and paste it into AwakenOS."`;
 
       const response = await supabase.functions.invoke('chat', {
         body: {
@@ -361,18 +419,22 @@ After gathering all info, generate a professional but friendly coaching agreemen
               </div>
               
               {/* Chat Messages */}
-              <div className="h-[200px] overflow-y-auto px-6 py-4 space-y-3">
+              <div className="h-[250px] overflow-y-auto px-6 py-4 space-y-3">
                 {chatMessages.map((msg, idx) => (
                   <div
                     key={idx}
                     className={cn(
-                      'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                      'max-w-[85%] rounded-lg px-3 py-2',
                       msg.role === 'assistant' 
                         ? 'bg-muted text-foreground' 
                         : 'bg-[#827666] text-white ml-auto'
                     )}
                   >
-                    {msg.content}
+                    {msg.role === 'assistant' ? (
+                      <MarkdownContent content={msg.content} className="text-sm" />
+                    ) : (
+                      <span className="text-sm">{msg.content}</span>
+                    )}
                   </div>
                 ))}
                 {isChatLoading && (
@@ -412,28 +474,28 @@ After gathering all info, generate a professional but friendly coaching agreemen
           {/* Contract Output (for item 4) */}
           {config.hasContractOutput && contractText && (
             <div className="px-6 py-4 border-b border-border">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">Your Contract Text</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-foreground">Your Coaching Agreement</span>
                 <Button variant="outline" size="sm" onClick={handleCopyContract}>
                   <Copy className="w-3 h-3 mr-1" />
-                  Copy
+                  Copy Contract
                 </Button>
               </div>
-              <div className="bg-muted rounded-lg p-3 max-h-[150px] overflow-y-auto">
-                <pre className="text-xs text-foreground whitespace-pre-wrap font-sans">{contractText}</pre>
+              <div className="bg-muted rounded-lg p-4 max-h-[250px] overflow-y-auto">
+                <MarkdownContent content={contractText} className="text-xs" />
               </div>
               
               {/* Legal Disclaimer */}
               <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
-                <p className="text-xs text-amber-800 dark:text-amber-200 mb-2">
-                  This is a template, not legal advice. We recommend having an attorney review contracts before using them with clients.
+                <p className="text-xs text-amber-800 dark:text-amber-200 mb-3">
+                  This is a template to help you get started — it's not legal advice. We recommend having a lawyer review your contract before using it with clients, especially for your specific jurisdiction.
                 </p>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <Checkbox 
                     checked={disclaimerAccepted} 
                     onCheckedChange={(checked) => setDisclaimerAccepted(checked === true)}
                   />
-                  <span className="text-xs text-foreground">I understand this is a template</span>
+                  <span className="text-xs text-foreground">I understand this is a template and I should seek legal advice</span>
                 </label>
               </div>
             </div>
