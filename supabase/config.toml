@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.parse-document]
 verify_jwt = true
+
+[functions.ai-foundation-chat]
+verify_jwt = true
+
+[functions.generate-ai-outputs]
+verify_jwt = true
