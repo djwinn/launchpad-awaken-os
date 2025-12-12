@@ -14,6 +14,8 @@ interface PhaseCardProps {
   progress?: { current: number; total: number };
   buttonLabel: string;
   onClick: () => void;
+  secondaryButtonLabel?: string;
+  onSecondaryClick?: () => void;
 }
 
 export function PhaseCard({
@@ -26,6 +28,8 @@ export function PhaseCard({
   progress,
   buttonLabel,
   onClick,
+  secondaryButtonLabel,
+  onSecondaryClick,
 }: PhaseCardProps) {
   const isComplete = status === 'complete';
 
@@ -87,18 +91,29 @@ export function PhaseCard({
           />
         )}
 
-        <Button
-          onClick={onClick}
-          className={cn(
-            'w-full font-semibold',
-            isComplete
-              ? 'bg-[#1fb14c]/10 text-[#1fb14c] hover:bg-[#1fb14c]/20 border border-[#1fb14c]/30'
-              : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
+        <div className={cn('flex gap-2', secondaryButtonLabel ? 'flex-col sm:flex-row' : '')}>
+          <Button
+            onClick={onClick}
+            className={cn(
+              'flex-1 font-semibold',
+              isComplete
+                ? 'bg-[#1fb14c]/10 text-[#1fb14c] hover:bg-[#1fb14c]/20 border border-[#1fb14c]/30'
+                : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
+            )}
+            variant={isComplete ? 'outline' : 'default'}
+          >
+            {buttonLabel}
+          </Button>
+          {secondaryButtonLabel && onSecondaryClick && (
+            <Button
+              onClick={onSecondaryClick}
+              variant="outline"
+              className="flex-1 font-semibold"
+            >
+              {secondaryButtonLabel}
+            </Button>
           )}
-          variant={isComplete ? 'outline' : 'default'}
-        >
-          {buttonLabel}
-        </Button>
+        </div>
       </CardContent>
     </Card>
   );
