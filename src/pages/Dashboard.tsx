@@ -20,9 +20,14 @@ const Dashboard = () => {
   const [loadingProgress, setLoadingProgress] = useState(true);
 
   useEffect(() => {
-    const loadProgress = async () => {
-      if (!user?.email) return;
+    if (loading) return;
+    
+    if (!user?.email) {
+      setLoadingProgress(false);
+      return;
+    }
 
+    const loadProgress = async () => {
       const userProgress = await getOrCreateUserProgress(user.email);
       if (userProgress) {
         // Count completed funnels
@@ -33,7 +38,6 @@ const Dashboard = () => {
           .eq('completed', true);
 
         if (count !== null && count !== userProgress.funnels_created) {
-          // Update funnels_created if it changed
           setProgress({ ...userProgress, funnels_created: count });
         } else {
           setProgress(userProgress);
@@ -42,9 +46,7 @@ const Dashboard = () => {
       setLoadingProgress(false);
     };
 
-    if (user && !loading) {
-      loadProgress();
-    }
+    loadProgress();
   }, [user, loading]);
 
   const handleSignOut = async () => {
