@@ -23,6 +23,7 @@ interface SetupItemModalProps {
   isComplete: boolean;
   onClose: () => void;
   onComplete: (itemId: string) => void;
+  locationId?: string | null;
 }
 
 interface ChatMessage {
@@ -43,38 +44,39 @@ interface ItemConfig {
   hasAiChat?: boolean;
   aiOpeningMessage?: string;
   hasContractOutput?: boolean;
-  ghlUrl: string;
+  awakenPath: string;
 }
 
-const GHL_BASE_URL = 'https://app.gohighlevel.com';
+const AWAKEN_BASE_URL = 'https://app.awaken.digital/v2/location';
+const AWAKEN_HOME = 'https://app.awaken.digital';
 
 const itemConfigs: Record<string, ItemConfig> = {
   profile_complete: {
     title: 'Complete Your Profile',
-    description: 'Set up your business identity in GoHighLevel so everything you create carries your brand.',
+    description: 'Set up your business identity in AwakenOS so everything you create carries your brand.',
     icon: User,
     time: '~2 min',
-    videoCaption: 'Watch: Setting up your profile in GoHighLevel',
+    videoCaption: 'Watch: Setting up your profile in AwakenOS',
     instructions: [
-      'Click the button below to open GoHighLevel',
+      'Click the button below to open AwakenOS',
       'Go to Settings → Business Profile',
       'Enter your business name (sole traders: just use your name, e.g., "Sarah Smith Coaching")',
       'Add your email and phone number',
       'Upload your logo (optional but recommended)',
-      'Click Save in GoHighLevel',
+      'Click Save in AwakenOS',
       'Come back here and click "I\'ve Completed This"',
     ],
     completionMessage: 'Your brand is set up! Everything you create will now carry your name.',
-    ghlUrl: `${GHL_BASE_URL}/settings/business-profile`,
+    awakenPath: '/settings/company',
   },
   calendar_connected: {
     title: 'Connect Your Calendar',
     description: 'Sync your calendar so clients can only book when you\'re actually available.',
     icon: Calendar,
     time: '~2 min',
-    videoCaption: 'Watch: Connecting your calendar in GoHighLevel',
+    videoCaption: 'Watch: Connecting your calendar in AwakenOS',
     instructions: [
-      'Click the button below to open GoHighLevel',
+      'Click the button below to open AwakenOS',
       'Go to Settings → Calendars → Connections',
       'Click "Connect" next to Google Calendar, Outlook, or iCloud',
       'Sign in and grant permission',
@@ -86,16 +88,16 @@ const itemConfigs: Record<string, ItemConfig> = {
       'Make sure you\'re granting calendar permissions, not just signing in',
     ],
     completionMessage: 'Calendar connected! Your availability syncs automatically — no more double-bookings.',
-    ghlUrl: `${GHL_BASE_URL}/settings/calendars`,
+    awakenPath: '/settings/calendars/connections',
   },
   booking_page_created: {
     title: 'Create Your Booking Page',
     description: 'Set up a professional booking page so clients can schedule calls with you.',
     icon: Link2,
     time: '~5 min',
-    videoCaption: 'Watch: Creating your booking page in GoHighLevel',
+    videoCaption: 'Watch: Creating your booking page in AwakenOS',
     instructions: [
-      'Click the button below to open GoHighLevel',
+      'Click the button below to open AwakenOS',
       'Go to Settings → Calendars → Create New Calendar',
       'Use the settings we discussed (or choose your own)',
       'Set your available hours',
@@ -104,18 +106,18 @@ const itemConfigs: Record<string, ItemConfig> = {
     ],
     completionMessage: 'Your booking page is live! You now have a professional link to share with potential clients.',
     hasAiChat: true,
-    aiOpeningMessage: "I'll help you set up your booking page. Before you head into GoHighLevel, let's figure out the settings. What do you want to call your booking page? Most coaches use 'Discovery Call' or 'Free Consultation'.",
-    ghlUrl: `${GHL_BASE_URL}/settings/calendars`,
+    aiOpeningMessage: "I'll help you set up your booking page. Before you head into AwakenOS, let's figure out the settings. What do you want to call your booking page? Most coaches use 'Discovery Call' or 'Free Consultation'.",
+    awakenPath: '/settings/calendars',
   },
   contract_prepared: {
     title: 'Prepare Your Contract',
     description: 'Have a professional agreement ready to send when clients are ready to work with you.',
     icon: FileText,
     time: '~5 min',
-    videoCaption: 'Watch: Setting up contracts in GoHighLevel',
+    videoCaption: 'Watch: Setting up contracts in AwakenOS',
     instructions: [
       'Copy the contract text above',
-      'Click the button to open GoHighLevel',
+      'Click the button to open AwakenOS',
       'Go to Payments → Documents & Contracts → Templates',
       'Create a new template and paste your contract',
       'Save the template',
@@ -124,17 +126,17 @@ const itemConfigs: Record<string, ItemConfig> = {
     completionMessage: 'Contract template ready! You can now send professional agreements to clients with one click.',
     hasAiChat: true,
     hasContractOutput: true,
-    aiOpeningMessage: "Let's prepare your coaching contract. I'll ask a few questions, then give you the text to paste into GoHighLevel. What type of coaching do you offer?",
-    ghlUrl: `${GHL_BASE_URL}/payments/documents`,
+    aiOpeningMessage: "Let's prepare your coaching contract. I'll ask a few questions, then give you the text to paste into AwakenOS. What type of coaching do you offer?",
+    awakenPath: '/payments/proposals-estimates',
   },
   payments_connected: {
     title: 'Set Up Payments',
     description: 'Connect your payment processor so you can get paid seamlessly.',
     icon: CreditCard,
     time: '~3 min',
-    videoCaption: 'Watch: Connecting Stripe in GoHighLevel',
+    videoCaption: 'Watch: Connecting Stripe in AwakenOS',
     instructions: [
-      'Click the button below to open GoHighLevel',
+      'Click the button below to open AwakenOS',
       'Go to Payments → Integrations',
       'Click "Connect with Stripe"',
       'Create a Stripe account (free) or sign in to existing',
@@ -144,11 +146,11 @@ const itemConfigs: Record<string, ItemConfig> = {
     ],
     note: "Don't have Stripe yet? You'll create a free account during the connection process.",
     completionMessage: 'Payments connected! You can now invoice clients and get paid directly.',
-    ghlUrl: `${GHL_BASE_URL}/payments/integrations`,
+    awakenPath: '/payments/integrations',
   },
 };
 
-export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: SetupItemModalProps) {
+export function SetupItemModal({ itemId, isComplete, onClose, onComplete, locationId }: SetupItemModalProps) {
   const { toast } = useToast();
   const [instructionsOpen, setInstructionsOpen] = useState(true);
   const [troubleshootingOpen, setTroubleshootingOpen] = useState(false);
@@ -197,8 +199,11 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
 
   const Icon = config.icon;
 
-  const handleOpenGHL = () => {
-    window.open(config.ghlUrl, '_blank', 'noopener,noreferrer');
+  const handleOpenAwaken = () => {
+    const url = locationId 
+      ? `${AWAKEN_BASE_URL}/${locationId}${config.awakenPath}`
+      : AWAKEN_HOME;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const handleComplete = async () => {
@@ -222,11 +227,11 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
 
     try {
       const systemPrompt = itemId === 'booking_page_created' 
-        ? `You are a helpful assistant guiding a coach through setting up their booking page in GoHighLevel. Be warm, direct, and keep responses under 60 words. Guide them through:
+        ? `You are a helpful assistant guiding a coach through setting up their booking page in AwakenOS. Be warm, direct, and keep responses under 60 words. Guide them through:
 1. What to name their booking page (suggest "Discovery Call" or "Free Consultation")
 2. How long sessions should be (suggest 30 minutes)
 3. Meeting type (Zoom, Google Meet, or phone)
-After gathering these, summarize their choices and tell them they're ready to create it in GoHighLevel.`
+After gathering these, summarize their choices and tell them they're ready to create it in AwakenOS.`
         : `You are a helpful assistant guiding a coach through preparing their coaching contract. Be warm, direct, and keep responses under 60 words. Guide them through:
 1. What type of coaching they offer
 2. Their typical package structure (e.g., 6 sessions over 3 months)
@@ -468,12 +473,18 @@ After gathering all info, generate a professional but friendly coaching agreemen
             <p className="text-sm text-muted-foreground mb-4">{config.description}</p>
             
             <Button 
-              onClick={handleOpenGHL}
+              onClick={handleOpenAwaken}
               className="w-full bg-[#827666] hover:bg-[#6b5a4a] mb-4"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Open GoHighLevel →
+              {locationId ? 'Open in AwakenOS →' : 'Open AwakenOS →'}
             </Button>
+            
+            {!locationId && (
+              <p className="text-xs text-muted-foreground mb-4 text-center">
+                Add your Location ID to go directly to the right page
+              </p>
+            )}
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-3">
