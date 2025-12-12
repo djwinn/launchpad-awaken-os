@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Send, Copy, Check, ChevronRight, ChevronDown, User, Users, Briefcase, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Copy, Check, ChevronRight, ChevronDown, User, Users, Briefcase, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -53,6 +53,12 @@ const AIFoundationBuilder = () => {
   const [copiedKB, setCopiedKB] = useState(false);
   const [copiedBI, setCopiedBI] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Initialize conversation
   useEffect(() => {
@@ -77,6 +83,87 @@ Ready? Let's start with the basics.`;
       inputRef.current.focus();
     }
   }, [isLoading]);
+
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        stream.getTracks().forEach(track => track.stop());
+        await transcribeAudio(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        title: 'Microphone Error',
+        description: 'Could not access microphone. Please check your permissions.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ audio: base64Audio }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Transcription failed');
+        }
+
+        const data = await response.json();
+        if (data.text) {
+          setInputValue(prev => prev ? `${prev} ${data.text}` : data.text);
+          inputRef.current?.focus();
+        }
+        setIsTranscribing(false);
+      };
+    } catch (error) {
+      console.error('Transcription error:', error);
+      toast({
+        title: 'Transcription Error',
+        description: error instanceof Error ? error.message : 'Failed to transcribe audio',
+        variant: 'destructive',
+      });
+      setIsTranscribing(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading || !user) return;
@@ -403,20 +490,39 @@ Review them in the tabs below, then copy them to your clipboard when ready.`
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your answer..."
-                  disabled={isLoading || isGenerating}
+                  placeholder={isTranscribing ? "Transcribing..." : "Type or speak your answer..."}
+                  disabled={isLoading || isGenerating || isTranscribing}
                   className="flex-1"
                 />
+                <Button
+                  variant={isRecording ? "destructive" : "outline"}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isLoading || isGenerating || isTranscribing}
+                  className={cn(
+                    isRecording && "animate-pulse"
+                  )}
+                >
+                  {isTranscribing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isRecording ? (
+                    <MicOff className="h-4 w-4" />
+                  ) : (
+                    <Mic className="h-4 w-4" />
+                  )}
+                </Button>
                 <Button 
                   onClick={handleSend} 
-                  disabled={!inputValue.trim() || isLoading || isGenerating}
+                  disabled={!inputValue.trim() || isLoading || isGenerating || isTranscribing}
                   className="bg-[#827666] hover:bg-[#6b5a4a]"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Press Enter to send • Take your time, detailed answers create better AI responses
+                {isRecording 
+                  ? "🎙️ Recording... Click the mic button to stop"
+                  : "Press Enter to send • Click 🎤 to use voice input"
+                }
               </p>
             </div>
           )}
