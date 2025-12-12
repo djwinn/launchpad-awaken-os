@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -6,16 +6,17 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check } from 'lucide-react';
+import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check, Copy, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SetupItemModalProps {
   itemId: string | null;
@@ -24,107 +25,170 @@ interface SetupItemModalProps {
   onComplete: (itemId: string) => void;
 }
 
+interface ChatMessage {
+  role: 'assistant' | 'user';
+  content: string;
+}
+
 interface ItemConfig {
   title: string;
   description: string;
   icon: typeof User;
   time: string;
-  videoTitle: string;
+  videoCaption: string;
   instructions: string[];
-  fields?: { id: string; label: string; placeholder: string; type?: string }[];
-  externalSetup?: boolean;
-  externalText?: string;
+  troubleshooting?: string[];
+  note?: string;
+  completionMessage: string;
   hasAiChat?: boolean;
+  aiOpeningMessage?: string;
+  hasContractOutput?: boolean;
+  ghlUrl: string;
 }
+
+const GHL_BASE_URL = 'https://app.gohighlevel.com';
 
 const itemConfigs: Record<string, ItemConfig> = {
   profile_complete: {
     title: 'Complete Your Profile',
-    description: 'Let clients know who you are. Add your business name and a brief description.',
+    description: 'Set up your business identity in GoHighLevel so everything you create carries your brand.',
     icon: User,
     time: '~2 min',
-    videoTitle: 'How to set up your profile',
+    videoCaption: 'Watch: Setting up your profile in GoHighLevel',
     instructions: [
-      'Enter your business or brand name',
-      'Add an optional tagline that captures what you do',
-      'This information will appear on your booking page and communications',
+      'Click the button below to open GoHighLevel',
+      'Go to Settings → Business Profile',
+      'Enter your business name (sole traders: just use your name, e.g., "Sarah Smith Coaching")',
+      'Add your email and phone number',
+      'Upload your logo (optional but recommended)',
+      'Click Save in GoHighLevel',
+      'Come back here and click "I\'ve Completed This"',
     ],
-    fields: [
-      { id: 'businessName', label: 'Business Name', placeholder: 'e.g., Wellness with Sarah' },
-      { id: 'tagline', label: 'Tagline (optional)', placeholder: 'e.g., Helping busy professionals find balance' },
-    ],
+    completionMessage: 'Your brand is set up! Everything you create will now carry your name.',
+    ghlUrl: `${GHL_BASE_URL}/settings/business-profile`,
   },
   calendar_connected: {
     title: 'Connect Your Calendar',
-    description: 'Sync your calendar so clients can book when you\'re actually available.',
+    description: 'Sync your calendar so clients can only book when you\'re actually available.',
     icon: Calendar,
     time: '~2 min',
-    videoTitle: 'How to connect your calendar',
+    videoCaption: 'Watch: Connecting your calendar in GoHighLevel',
     instructions: [
-      'Click the "Connect Calendar" button below',
-      'Choose Google Calendar or Outlook',
-      'Grant access to view your availability',
-      'Your calendar will sync automatically',
+      'Click the button below to open GoHighLevel',
+      'Go to Settings → Calendars → Connections',
+      'Click "Connect" next to Google Calendar, Outlook, or iCloud',
+      'Sign in and grant permission',
+      'You should see "Connected" status appear',
+      'Come back here and click "I\'ve Completed This"',
     ],
-    externalSetup: true,
-    externalText: 'Connect your Google Calendar or Outlook to automatically sync your availability.',
+    troubleshooting: [
+      'Multiple Google accounts? Try an incognito window and sign into just the one you want to connect',
+      'Make sure you\'re granting calendar permissions, not just signing in',
+    ],
+    completionMessage: 'Calendar connected! Your availability syncs automatically — no more double-bookings.',
+    ghlUrl: `${GHL_BASE_URL}/settings/calendars`,
   },
   booking_page_created: {
     title: 'Create Your Booking Page',
-    description: 'Set up your booking page so clients can schedule calls with you.',
+    description: 'Set up a professional booking page so clients can schedule calls with you.',
     icon: Link2,
     time: '~5 min',
-    videoTitle: 'How to create your booking page',
+    videoCaption: 'Watch: Creating your booking page in GoHighLevel',
     instructions: [
-      'Give your session a name (e.g., "Discovery Call")',
-      'Set how long the session should be',
-      'Your AI assistant can help you craft the perfect description',
+      'Click the button below to open GoHighLevel',
+      'Go to Settings → Calendars → Create New Calendar',
+      'Use the settings we discussed (or choose your own)',
+      'Set your available hours',
+      'Save and copy your booking link',
+      'Come back here and click "I\'ve Completed This"',
     ],
+    completionMessage: 'Your booking page is live! You now have a professional link to share with potential clients.',
     hasAiChat: true,
-    fields: [
-      { id: 'sessionName', label: 'Session Name', placeholder: 'e.g., Discovery Call' },
-      { id: 'duration', label: 'Duration (minutes)', placeholder: '30', type: 'number' },
-    ],
+    aiOpeningMessage: "I'll help you set up your booking page. Before you head into GoHighLevel, let's figure out the settings. What do you want to call your booking page? Most coaches use 'Discovery Call' or 'Free Consultation'.",
+    ghlUrl: `${GHL_BASE_URL}/settings/calendars`,
   },
   contract_prepared: {
     title: 'Prepare Your Contract',
     description: 'Have a professional agreement ready to send when clients are ready to work with you.',
     icon: FileText,
     time: '~5 min',
-    videoTitle: 'How to prepare your contract',
+    videoCaption: 'Watch: Setting up contracts in GoHighLevel',
     instructions: [
-      'Name your contract template',
-      'Add any special terms or conditions',
-      'Your AI assistant can help you include standard coaching agreement terms',
+      'Copy the contract text above',
+      'Click the button to open GoHighLevel',
+      'Go to Payments → Documents & Contracts → Templates',
+      'Create a new template and paste your contract',
+      'Save the template',
+      'Come back here and click "I\'ve Completed This"',
     ],
+    completionMessage: 'Contract template ready! You can now send professional agreements to clients with one click.',
     hasAiChat: true,
-    fields: [
-      { id: 'contractName', label: 'Contract Name', placeholder: 'e.g., Coaching Agreement' },
-      { id: 'terms', label: 'Key Terms (optional)', placeholder: 'Any special terms or conditions...', type: 'textarea' },
-    ],
+    hasContractOutput: true,
+    aiOpeningMessage: "Let's prepare your coaching contract. I'll ask a few questions, then give you the text to paste into GoHighLevel. What type of coaching do you offer?",
+    ghlUrl: `${GHL_BASE_URL}/payments/documents`,
   },
   payments_connected: {
     title: 'Set Up Payments',
     description: 'Connect your payment processor so you can get paid seamlessly.',
     icon: CreditCard,
     time: '~3 min',
-    videoTitle: 'How to set up payments',
+    videoCaption: 'Watch: Connecting Stripe in GoHighLevel',
     instructions: [
-      'Click "Connect Stripe" to open the setup wizard',
-      'Create a Stripe account or log in to an existing one',
-      'Follow the prompts to complete verification',
-      'Once connected, you can create invoices and accept payments',
+      'Click the button below to open GoHighLevel',
+      'Go to Payments → Integrations',
+      'Click "Connect with Stripe"',
+      'Create a Stripe account (free) or sign in to existing',
+      'Grant permissions',
+      'You should see "Connected" status',
+      'Come back here and click "I\'ve Completed This"',
     ],
-    externalSetup: true,
-    externalText: 'Connect Stripe to accept payments. You\'ll be able to create invoices and receive payments directly.',
+    note: "Don't have Stripe yet? You'll create a free account during the connection process.",
+    completionMessage: 'Payments connected! You can now invoice clients and get paid directly.',
+    ghlUrl: `${GHL_BASE_URL}/payments/integrations`,
   },
 };
 
 export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: SetupItemModalProps) {
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   const [instructionsOpen, setInstructionsOpen] = useState(true);
+  const [troubleshootingOpen, setTroubleshootingOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  
+  // AI Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Contract state
+  const [contractText, setContractText] = useState('');
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+
+  // Initialize chat when panel opens
+  useEffect(() => {
+    if (itemId && itemConfigs[itemId]?.hasAiChat && chatMessages.length === 0) {
+      const config = itemConfigs[itemId];
+      if (config.aiOpeningMessage) {
+        setChatMessages([{ role: 'assistant', content: config.aiOpeningMessage }]);
+      }
+    }
+  }, [itemId]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!itemId) {
+      setChatMessages([]);
+      setChatInput('');
+      setContractText('');
+      setDisclaimerAccepted(false);
+    }
+  }, [itemId]);
 
   if (!itemId) return null;
 
@@ -133,28 +197,86 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
 
   const Icon = config.icon;
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+  const handleOpenGHL = () => {
+    window.open(config.ghlUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleComplete = async () => {
+    setIsCompleting(true);
     setShowSuccess(true);
+    
     setTimeout(() => {
       onComplete(itemId);
-      setFormData({});
       setShowSuccess(false);
-      setIsSubmitting(false);
+      setIsCompleting(false);
     }, 1500);
   };
 
-  const handleExternalConnect = async () => {
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setShowSuccess(true);
-    setTimeout(() => {
-      onComplete(itemId);
-      setShowSuccess(false);
-      setIsSubmitting(false);
-    }, 1500);
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || isChatLoading) return;
+    
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsChatLoading(true);
+
+    try {
+      const systemPrompt = itemId === 'booking_page_created' 
+        ? `You are a helpful assistant guiding a coach through setting up their booking page in GoHighLevel. Be warm, direct, and keep responses under 60 words. Guide them through:
+1. What to name their booking page (suggest "Discovery Call" or "Free Consultation")
+2. How long sessions should be (suggest 30 minutes)
+3. Meeting type (Zoom, Google Meet, or phone)
+After gathering these, summarize their choices and tell them they're ready to create it in GoHighLevel.`
+        : `You are a helpful assistant guiding a coach through preparing their coaching contract. Be warm, direct, and keep responses under 60 words. Guide them through:
+1. What type of coaching they offer
+2. Their typical package structure (e.g., 6 sessions over 3 months)
+3. Their cancellation policy (e.g., 24 hours notice)
+After gathering all info, generate a professional but friendly coaching agreement contract and say "Here's your contract text:" followed by the full contract text they can copy.`;
+
+      const response = await supabase.functions.invoke('chat', {
+        body: {
+          messages: [
+            ...chatMessages.map(m => ({ role: m.role, content: m.content })),
+            { role: 'user', content: userMessage }
+          ],
+          systemPrompt,
+          isSetupChat: true,
+        }
+      });
+
+      if (response.error) throw response.error;
+      
+      const assistantMessage = response.data?.message || response.data?.choices?.[0]?.message?.content || '';
+      setChatMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      
+      // Check if contract was generated
+      if (itemId === 'contract_prepared' && assistantMessage.toLowerCase().includes("here's your contract")) {
+        const contractMatch = assistantMessage.split(/here'?s your contract text:?/i)[1];
+        if (contractMatch) {
+          setContractText(contractMatch.trim());
+        }
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to get response. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsChatLoading(false);
+    }
   };
+
+  const handleCopyContract = () => {
+    navigator.clipboard.writeText(contractText);
+    toast({
+      title: 'Copied!',
+      description: 'Contract text copied to clipboard.',
+    });
+  };
+
+  const canComplete = !config.hasContractOutput || (contractText && disclaimerAccepted);
 
   return (
     <Sheet open={!!itemId} onOpenChange={() => onClose()}>
@@ -165,7 +287,7 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
             <div className="w-16 h-16 rounded-full bg-[#1fb14c] flex items-center justify-center mb-4 animate-scale-in">
               <Check className="w-8 h-8 text-white" />
             </div>
-            <p className="text-lg font-semibold text-foreground">Step completed!</p>
+            <p className="text-lg font-semibold text-foreground text-center px-6">{config.completionMessage}</p>
           </div>
         )}
 
@@ -176,9 +298,7 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
               <div className="w-10 h-10 rounded-xl bg-[#827666]/10 flex items-center justify-center">
                 <Icon className="w-5 h-5 text-[#827666]" />
               </div>
-              <div>
-                <SheetTitle className="text-lg text-left">{config.title}</SheetTitle>
-              </div>
+              <SheetTitle className="text-lg text-left">{config.title}</SheetTitle>
             </div>
             <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
               {config.time}
@@ -197,9 +317,92 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
               <span className="text-sm text-muted-foreground">Video coming soon</span>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              Watch: {config.videoTitle}
+              {config.videoCaption}
             </p>
           </div>
+
+          {/* AI Chat Section (for items 3 and 4) */}
+          {config.hasAiChat && (
+            <div className="border-b border-border">
+              <div className="px-6 py-3 bg-muted/30">
+                <span className="text-sm font-medium text-foreground">Chat with AI Assistant</span>
+              </div>
+              
+              {/* Chat Messages */}
+              <div className="h-[200px] overflow-y-auto px-6 py-4 space-y-3">
+                {chatMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={cn(
+                      'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+                      msg.role === 'assistant' 
+                        ? 'bg-muted text-foreground' 
+                        : 'bg-[#827666] text-white ml-auto'
+                    )}
+                  >
+                    {msg.content}
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="bg-muted rounded-lg px-3 py-2 max-w-[85%]">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Chat Input */}
+              <div className="px-6 pb-4">
+                <div className="flex gap-2">
+                  <Input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Type your response..."
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                    disabled={isChatLoading}
+                  />
+                  <Button 
+                    size="icon" 
+                    onClick={handleSendMessage} 
+                    disabled={!chatInput.trim() || isChatLoading}
+                    className="bg-[#827666] hover:bg-[#6b5a4a]"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Contract Output (for item 4) */}
+          {config.hasContractOutput && contractText && (
+            <div className="px-6 py-4 border-b border-border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">Your Contract Text</span>
+                <Button variant="outline" size="sm" onClick={handleCopyContract}>
+                  <Copy className="w-3 h-3 mr-1" />
+                  Copy
+                </Button>
+              </div>
+              <div className="bg-muted rounded-lg p-3 max-h-[150px] overflow-y-auto">
+                <pre className="text-xs text-foreground whitespace-pre-wrap font-sans">{contractText}</pre>
+              </div>
+              
+              {/* Legal Disclaimer */}
+              <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                <p className="text-xs text-amber-800 dark:text-amber-200 mb-2">
+                  This is a template, not legal advice. We recommend having an attorney review contracts before using them with clients.
+                </p>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox 
+                    checked={disclaimerAccepted} 
+                    onCheckedChange={(checked) => setDisclaimerAccepted(checked === true)}
+                  />
+                  <span className="text-xs text-foreground">I understand this is a template</span>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Collapsible Instructions */}
           <Collapsible open={instructionsOpen} onOpenChange={setInstructionsOpen} className="border-b border-border">
@@ -226,84 +429,84 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete }: Setu
             </CollapsibleContent>
           </Collapsible>
 
+          {/* Troubleshooting Tips (for calendar) */}
+          {config.troubleshooting && (
+            <Collapsible open={troubleshootingOpen} onOpenChange={setTroubleshootingOpen} className="border-b border-border">
+              <CollapsibleTrigger className="w-full px-6 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <span className="text-sm font-medium text-foreground">Troubleshooting tips</span>
+                <ChevronDown className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                  troubleshootingOpen && "rotate-180"
+                )} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-6 pb-4">
+                  <ul className="space-y-2">
+                    {config.troubleshooting.map((tip, index) => (
+                      <li key={index} className="text-sm text-muted-foreground flex gap-2">
+                        <span className="text-muted-foreground">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
+          {/* Note (for payments) */}
+          {config.note && (
+            <div className="px-6 py-4 border-b border-border">
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                💡 {config.note}
+              </p>
+            </div>
+          )}
+
           {/* Action Section */}
           <div className="px-6 py-4">
             <p className="text-sm text-muted-foreground mb-4">{config.description}</p>
+            
+            <Button 
+              onClick={handleOpenGHL}
+              className="w-full bg-[#827666] hover:bg-[#6b5a4a] mb-4"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open GoHighLevel →
+            </Button>
 
-            {config.externalSetup ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground mb-6">{config.externalText}</p>
-                <Button 
-                  onClick={handleExternalConnect}
-                  disabled={isSubmitting}
-                  className="bg-[#827666] hover:bg-[#6b5a4a]"
-                >
-                  {isSubmitting ? 'Connecting...' : (
-                    <>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      {itemId === 'calendar_connected' ? 'Connect Calendar' : 'Connect Stripe'}
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-4">
-                  For this demo, clicking will mark as complete.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {config.fields?.map((field) => (
-                  <div key={field.id} className="space-y-2">
-                    <Label htmlFor={field.id}>{field.label}</Label>
-                    {field.type === 'textarea' ? (
-                      <Textarea
-                        id={field.id}
-                        placeholder={field.placeholder}
-                        value={formData[field.id] || ''}
-                        onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                        className="min-h-[100px]"
-                      />
-                    ) : (
-                      <Input
-                        id={field.id}
-                        type={field.type || 'text'}
-                        placeholder={field.placeholder}
-                        value={formData[field.id] || ''}
-                        onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground mb-3">
+                Done? Let us know so we can track your progress.
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleComplete}
+                disabled={isCompleting || !canComplete}
+                className={cn(
+                  'w-full',
+                  isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                )}
+              >
+                {isCompleting ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                {isComplete ? 'Complete ✓' : "I've Completed This ✓"}
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border mt-auto">
-          {!config.externalSetup ? (
-            <div className="flex items-center justify-between">
-              <button 
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                onClick={onClose}
-              >
-                I'll do this later
-              </button>
-              <Button 
-                className="bg-[#827666] hover:bg-[#6b5a4a]" 
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : isComplete ? 'Update' : 'Complete'}
-              </Button>
-            </div>
-          ) : (
-            <button 
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-2"
-              onClick={onClose}
-            >
-              I'll do this later
-            </button>
-          )}
+        <div className="px-6 py-4 border-t border-border">
+          <button 
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center py-2"
+            onClick={onClose}
+          >
+            I'll do this later
+          </button>
         </div>
       </SheetContent>
     </Sheet>
