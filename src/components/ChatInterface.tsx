@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Mic, MicOff, Paperclip } from 'lucide-react';
+import { Send, Loader2, Mic, MicOff, Paperclip, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
 import { isOutputComplete } from '@/lib/output-parser';
@@ -28,6 +29,7 @@ export function ChatInterface({
   onOutputComplete,
   conversationId
 }: ChatInterfaceProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -357,12 +359,18 @@ export function ChatInterface({
   };
   return <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-border/50">
-        <img src={logo} alt="Logo" className="h-8 w-auto" />
-        <div>
-          <h1 className="font-medium text-foreground">Mini-Funnel Builder</h1>
-          <p className="text-xs text-muted-foreground">Building with {userInfo.name}</p>
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Logo" className="h-8 w-auto" />
+          <div>
+            <h1 className="font-medium text-foreground">Mini-Funnel Builder</h1>
+            <p className="text-xs text-muted-foreground">Building with {userInfo.name}</p>
+          </div>
         </div>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+          <Home className="h-4 w-4 mr-2" />
+          Dashboard
+        </Button>
       </header>
 
       {/* Messages */}
