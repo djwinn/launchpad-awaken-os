@@ -155,8 +155,8 @@ const Dashboard = () => {
               description="Build landing pages, lead magnets, and email sequences that bring the right people to you."
               timeEstimate="20-30 minutes per funnel"
               status={hasFunnels ? 'complete' : hasIncompleteChat ? 'in-progress' : 'not-started'}
-              buttonLabel={hasIncompleteChat ? "Continue Chat" : "Create New Funnel"}
-              onClick={() => navigate(hasIncompleteChat ? '/?continue=true' : '/funnel-builder')}
+              buttonLabel={hasIncompleteChat ? "Continue Chat" : "Start New Funnel"}
+              onClick={() => navigate('/funnel-builder')}
               secondaryButtonLabel={hasFunnels ? "View Previous" : undefined}
               onSecondaryClick={hasFunnels ? () => navigate('/outputs') : undefined}
             />
