@@ -156,7 +156,7 @@ const Dashboard = () => {
               timeEstimate="20-30 minutes per funnel"
               status={hasFunnels ? 'complete' : hasIncompleteChat ? 'in-progress' : 'not-started'}
               buttonLabel={hasIncompleteChat ? "Continue Chat" : "Create New Funnel"}
-              onClick={() => navigate(hasIncompleteChat ? '/' : '/funnel-builder')}
+              onClick={() => navigate(hasIncompleteChat ? '/?continue=true' : '/funnel-builder')}
               secondaryButtonLabel={hasFunnels ? "View Previous" : undefined}
               onSecondaryClick={hasFunnels ? () => navigate('/outputs') : undefined}
             />
