@@ -476,7 +476,12 @@ After generating, say: "Review it above and make any edits you need. When you're
             <div className="px-6 py-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-foreground">Your Coaching Agreement</span>
-                <Button variant="outline" size="sm" onClick={handleCopyContract}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleCopyContract}
+                  disabled={!disclaimerAccepted}
+                >
                   <Copy className="w-3 h-3 mr-1" />
                   Copy Contract
                 </Button>
