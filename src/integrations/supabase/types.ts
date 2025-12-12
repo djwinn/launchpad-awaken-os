@@ -52,32 +52,47 @@ export type Database = {
       }
       user_progress: {
         Row: {
+          booking_page_created: boolean
+          calendar_connected: boolean
+          contract_prepared: boolean
           created_at: string
           funnels_created: number
           id: string
+          payments_connected: boolean
           phase1_complete: boolean
           phase1_progress: number
           phase2_complete: boolean
+          profile_complete: boolean
           updated_at: string
           user_email: string
         }
         Insert: {
+          booking_page_created?: boolean
+          calendar_connected?: boolean
+          contract_prepared?: boolean
           created_at?: string
           funnels_created?: number
           id?: string
+          payments_connected?: boolean
           phase1_complete?: boolean
           phase1_progress?: number
           phase2_complete?: boolean
+          profile_complete?: boolean
           updated_at?: string
           user_email: string
         }
         Update: {
+          booking_page_created?: boolean
+          calendar_connected?: boolean
+          contract_prepared?: boolean
           created_at?: string
           funnels_created?: number
           id?: string
+          payments_connected?: boolean
           phase1_complete?: boolean
           phase1_progress?: number
           phase2_complete?: boolean
+          profile_complete?: boolean
           updated_at?: string
           user_email?: string
         }
