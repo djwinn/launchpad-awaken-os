@@ -20,8 +20,8 @@ const Index = () => {
   const [searchParams] = useSearchParams();
   
   // Don't redirect to dashboard if user is starting a new funnel or continuing
-  const isFunnelRoute = location.pathname === '/funnel-builder' || searchParams.get('continue') === 'true';
-  const [view, setView] = useState<AppView>(isFunnelRoute ? 'chat' : 'landing');
+  const isFunnelRoute = location.pathname === '/funnel-builder';
+  const [view, setView] = useState<AppView>('landing');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -64,10 +64,10 @@ const Index = () => {
         initializingRef.current = false;
       }
     };
-    if (user && view === 'landing' && !loading) {
+    if (user && !loading && !initializingRef.current) {
       initConversation();
     }
-  }, [user, view, loading]);
+  }, [user, loading]);
 
   // Redirect authenticated users to dashboard unless they're on funnel route
   useEffect(() => {
