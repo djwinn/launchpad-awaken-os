@@ -243,7 +243,15 @@ const AITraining = () => {
                   isLocked && 'opacity-60',
                   !isComplete && !isLocked && 'cursor-pointer hover:shadow-md'
                 )}
-                onClick={() => !isComplete && !isLocked && setActiveItem(item.id)}
+                onClick={() => {
+                  if (!isComplete && !isLocked) {
+                    if (item.id === 'ai_foundation_complete') {
+                      navigate('/ai-training/builder');
+                    } else {
+                      setActiveItem(item.id);
+                    }
+                  }
+                }}
               >
                 <div className="flex items-center gap-4">
                   {/* Status Icon */}
@@ -288,7 +296,13 @@ const AITraining = () => {
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!isLocked) setActiveItem(item.id);
+                        if (!isLocked) {
+                          if (item.id === 'ai_foundation_complete') {
+                            navigate('/ai-training/builder');
+                          } else {
+                            setActiveItem(item.id);
+                          }
+                        }
                       }}
                     >
                       {isComplete ? 'Review' : 'Start'}

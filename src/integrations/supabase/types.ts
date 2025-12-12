@@ -53,13 +53,16 @@ export type Database = {
       user_progress: {
         Row: {
           ai_foundation_complete: boolean | null
+          ai_foundation_data: Json | null
           ai_responder_active: boolean | null
           booking_page_created: boolean
+          bot_instructions: string | null
           calendar_connected: boolean
           contract_prepared: boolean
           created_at: string
           funnels_created: number
           id: string
+          knowledge_base_content: string | null
           location_id: string | null
           payments_connected: boolean
           phase1_complete: boolean
@@ -72,13 +75,16 @@ export type Database = {
         }
         Insert: {
           ai_foundation_complete?: boolean | null
+          ai_foundation_data?: Json | null
           ai_responder_active?: boolean | null
           booking_page_created?: boolean
+          bot_instructions?: string | null
           calendar_connected?: boolean
           contract_prepared?: boolean
           created_at?: string
           funnels_created?: number
           id?: string
+          knowledge_base_content?: string | null
           location_id?: string | null
           payments_connected?: boolean
           phase1_complete?: boolean
@@ -91,13 +97,16 @@ export type Database = {
         }
         Update: {
           ai_foundation_complete?: boolean | null
+          ai_foundation_data?: Json | null
           ai_responder_active?: boolean | null
           booking_page_created?: boolean
+          bot_instructions?: string | null
           calendar_connected?: boolean
           contract_prepared?: boolean
           created_at?: string
           funnels_created?: number
           id?: string
+          knowledge_base_content?: string | null
           location_id?: string | null
           payments_connected?: boolean
           phase1_complete?: boolean
