@@ -402,6 +402,9 @@ After gathering all info, generate a professional but friendly coaching agreemen
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  This AI generates a template contract for guidance only — it is not legal advice. We recommend having an attorney review any contract before use.
+                </p>
               </div>
             </div>
           )}
