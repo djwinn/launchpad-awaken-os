@@ -117,7 +117,8 @@ const itemConfigs: Record<string, ItemConfig> = {
     time: '~5 min',
     videoCaption: 'Watch: Setting up contracts in AwakenOS',
     instructions: [
-      'Copy the contract text above',
+      'Use the AI chat below to generate your contract',
+      'Copy the contract text once generated',
       'Click the button to open AwakenOS',
       'Go to Payments → Documents & Contracts → Templates',
       'Create a new template and paste your contract',
@@ -327,7 +328,32 @@ After gathering all info, generate a professional but friendly coaching agreemen
             </p>
           </div>
 
-          {/* AI Chat Section (for items 3 and 4) */}
+          {/* Collapsible Instructions */}
+          <Collapsible open={instructionsOpen} onOpenChange={setInstructionsOpen} className="border-b border-border">
+            <CollapsibleTrigger className="w-full px-6 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <span className="text-sm font-medium text-foreground">Step-by-step instructions</span>
+              <ChevronDown className={cn(
+                "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                instructionsOpen && "rotate-180"
+              )} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-6 pb-4">
+                <ol className="space-y-2">
+                  {config.instructions.map((instruction, index) => (
+                    <li key={index} className="flex gap-3 text-sm text-muted-foreground">
+                      <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                        {index + 1}
+                      </span>
+                      <span>{instruction}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+
+          {/* AI Chat Section (for item 4 - contract) */}
           {config.hasAiChat && (
             <div className="border-b border-border">
               <div className="px-6 py-3 bg-muted/30">
@@ -409,31 +435,6 @@ After gathering all info, generate a professional but friendly coaching agreemen
               </div>
             </div>
           )}
-
-          {/* Collapsible Instructions */}
-          <Collapsible open={instructionsOpen} onOpenChange={setInstructionsOpen} className="border-b border-border">
-            <CollapsibleTrigger className="w-full px-6 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
-              <span className="text-sm font-medium text-foreground">Step-by-step instructions</span>
-              <ChevronDown className={cn(
-                "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                instructionsOpen && "rotate-180"
-              )} />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="px-6 pb-4">
-                <ol className="space-y-2">
-                  {config.instructions.map((instruction, index) => (
-                    <li key={index} className="flex gap-3 text-sm text-muted-foreground">
-                      <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-xs font-medium">
-                        {index + 1}
-                      </span>
-                      <span>{instruction}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
 
           {/* Troubleshooting Tips (for calendar) */}
           {config.troubleshooting && (
