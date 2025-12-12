@@ -14,7 +14,9 @@ const MessageSchema = z.object({
 
 const ChatRequestSchema = z.object({
   messages: z.array(MessageSchema).min(1, 'At least one message required').max(100, 'Too many messages'),
-  userName: z.string().max(100, 'Name too long').optional()
+  userName: z.string().max(100, 'Name too long').optional(),
+  systemPrompt: z.string().max(10000).optional(),
+  isSetupChat: z.boolean().optional()
 });
 
 const SYSTEM_PROMPT = `You are the AwakenOS Mini-Funnel Builder, an AI assistant that helps coaches and practitioners create a complete mini-funnel through conversation.
@@ -661,7 +663,7 @@ serve(async (req) => {
       );
     }
     
-    const { messages, userName } = parseResult.data;
+    const { messages, userName, systemPrompt, isSetupChat } = parseResult.data;
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     
     if (!ANTHROPIC_API_KEY) {
@@ -672,7 +674,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('Calling Claude API with', messages.length, 'messages');
+    console.log('Calling Claude API with', messages.length, 'messages', isSetupChat ? '(setup chat)' : '');
+
+    // Use custom system prompt for setup chat, otherwise use default
+    const activeSystemPrompt = isSetupChat && systemPrompt ? systemPrompt : SYSTEM_PROMPT;
+    const maxTokens = isSetupChat ? 1024 : 16384;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -683,10 +689,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 16384,
-        system: SYSTEM_PROMPT,
+        max_tokens: maxTokens,
+        system: activeSystemPrompt,
         messages: messages,
-        stream: true,
+        stream: !isSetupChat, // Don't stream for setup chat
       }),
     });
 
@@ -699,7 +705,17 @@ serve(async (req) => {
       );
     }
 
-    // Stream the response back
+    // For setup chat, return non-streamed response
+    if (isSetupChat) {
+      const data = await response.json();
+      const message = data.content?.[0]?.text || '';
+      return new Response(
+        JSON.stringify({ message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Stream the response back for main funnel chat
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
