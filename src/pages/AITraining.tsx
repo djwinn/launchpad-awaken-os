@@ -247,6 +247,8 @@ const AITraining = () => {
                   if (!isComplete && !isLocked) {
                     if (item.id === 'ai_foundation_complete') {
                       navigate('/ai-training/builder');
+                    } else if (item.id === 'ai_responder_active') {
+                      navigate('/ai-training/activate');
                     } else {
                       setActiveItem(item.id);
                     }
@@ -299,6 +301,8 @@ const AITraining = () => {
                         if (!isLocked) {
                           if (item.id === 'ai_foundation_complete') {
                             navigate('/ai-training/builder');
+                          } else if (item.id === 'ai_responder_active') {
+                            navigate('/ai-training/activate');
                           } else {
                             setActiveItem(item.id);
                           }

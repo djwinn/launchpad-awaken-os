@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import AITraining from "./pages/AITraining";
 import AIFoundationBuilder from "./pages/AIFoundationBuilder";
+import AIResponderActivation from "./pages/AIResponderActivation";
 import OutputsHistory from "./pages/OutputsHistory";
 import NotFound from "./pages/NotFound";
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/setup" element={<Setup />} />
           <Route path="/ai-training" element={<AITraining />} />
           <Route path="/ai-training/builder" element={<AIFoundationBuilder />} />
+          <Route path="/ai-training/activate" element={<AIResponderActivation />} />
           <Route path="/funnel-builder" element={<Index />} />
           <Route path="/outputs" element={<OutputsHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
