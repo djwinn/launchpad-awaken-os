@@ -6,7 +6,7 @@ import { OutputView } from '@/components/OutputView';
 import { useAuth } from '@/hooks/useAuth';
 import { findIncompleteConversation, createConversation } from '@/lib/conversations';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, FileText, Plus } from 'lucide-react';
+import { LogOut, Loader2, FileText, Plus, Home } from 'lucide-react';
 import type { Message, UserInfo, AppView } from '@/types/chat';
 import { Link } from 'react-router-dom';
 const Index = () => {
@@ -133,9 +133,11 @@ const Index = () => {
               My Outputs
             </Link>
           </Button>
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/dashboard">
+              <Home className="h-4 w-4 mr-2" />
+              Dashboard
+            </Link>
           </Button>
         </div>
         <OutputView userInfo={userInfo} messages={messages} onStartOver={handleStartOver} onBackToChat={handleBackToChat} />
@@ -153,9 +155,11 @@ const Index = () => {
             My Outputs
           </Link>
         </Button>
-        <Button variant="outline" size="sm" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/dashboard">
+            <Home className="h-4 w-4 mr-2" />
+            Dashboard
+          </Link>
         </Button>
       </div>
       <ChatInterface userInfo={userInfo} messages={messages} setMessages={setMessages} onOutputComplete={handleOutputComplete} conversationId={conversationId} />
