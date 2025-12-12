@@ -52,6 +52,8 @@ export type Database = {
       }
       user_progress: {
         Row: {
+          ai_foundation_complete: boolean | null
+          ai_responder_active: boolean | null
           booking_page_created: boolean
           calendar_connected: boolean
           contract_prepared: boolean
@@ -64,10 +66,13 @@ export type Database = {
           phase1_progress: number
           phase2_complete: boolean
           profile_complete: boolean
+          reminders_configured: boolean | null
           updated_at: string
           user_email: string
         }
         Insert: {
+          ai_foundation_complete?: boolean | null
+          ai_responder_active?: boolean | null
           booking_page_created?: boolean
           calendar_connected?: boolean
           contract_prepared?: boolean
@@ -80,10 +85,13 @@ export type Database = {
           phase1_progress?: number
           phase2_complete?: boolean
           profile_complete?: boolean
+          reminders_configured?: boolean | null
           updated_at?: string
           user_email: string
         }
         Update: {
+          ai_foundation_complete?: boolean | null
+          ai_responder_active?: boolean | null
           booking_page_created?: boolean
           calendar_connected?: boolean
           contract_prepared?: boolean
@@ -96,6 +104,7 @@ export type Database = {
           phase1_progress?: number
           phase2_complete?: boolean
           profile_complete?: boolean
+          reminders_configured?: boolean | null
           updated_at?: string
           user_email?: string
         }

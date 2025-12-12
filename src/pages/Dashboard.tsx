@@ -89,8 +89,15 @@ const Dashboard = () => {
     ? 'in-progress'
     : 'not-started';
 
+  const phase2InProgress = Boolean(
+    (progress as any)?.ai_foundation_complete || 
+    (progress as any)?.ai_responder_active || 
+    (progress as any)?.reminders_configured
+  );
   const phase2Status: 'not-started' | 'in-progress' | 'complete' = progress?.phase2_complete
     ? 'complete'
+    : phase2InProgress
+    ? 'in-progress'
     : 'not-started';
 
   const hasFunnels = (progress?.funnels_created ?? 0) > 0;
