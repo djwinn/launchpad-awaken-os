@@ -156,7 +156,7 @@ const Setup = () => {
       .from('user_progress')
       .update({
         [itemId]: true,
-        phase1_progress: completedCount,
+        phase1_progress: newCompletedCount,
         phase1_complete: phase1Complete,
       })
       .eq('user_email', user.email);
