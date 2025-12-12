@@ -91,7 +91,7 @@ export function PhaseCard({
           />
         )}
 
-        <div className={cn('flex gap-2', secondaryButtonLabel ? 'flex-col sm:flex-row' : '')}>
+        <div className={cn('flex flex-col gap-2', !secondaryButtonLabel && 'flex-row')}>
           <Button
             onClick={onClick}
             className={cn(
