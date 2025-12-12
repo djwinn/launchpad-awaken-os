@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Send, Copy, Check, ChevronRight, ChevronDown, User, Users, Briefcase, MessageSquare, Mic, MicOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,12 @@ interface CapturedData {
   customRules?: string;
 }
 
+interface SavedConversation {
+  messages: ChatMessage[];
+  currentQuestion: number;
+  savedAt: string;
+}
+
 const AIFoundationBuilder = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -53,6 +60,9 @@ const AIFoundationBuilder = () => {
   const [copiedKB, setCopiedKB] = useState(false);
   const [copiedBI, setCopiedBI] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+  const [savedConversation, setSavedConversation] = useState<SavedConversation | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -60,17 +70,80 @@ const AIFoundationBuilder = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // Initialize conversation
+  // Save conversation to database
+  const saveConversation = useCallback(async (msgs: ChatMessage[], questionNum: number) => {
+    if (!user?.email || msgs.length === 0) return;
+    
+    const conversationData = {
+      messages: msgs,
+      currentQuestion: questionNum,
+      savedAt: new Date().toISOString(),
+    };
+
+    await supabase
+      .from('user_progress')
+      .update({
+        ai_foundation_data: JSON.parse(JSON.stringify(conversationData)),
+      })
+      .eq('user_email', user.email);
+  }, [user?.email]);
+
+  // Load existing conversation on mount
   useEffect(() => {
-    if (messages.length === 0 && user) {
-      const openingMessage = `Hey! I'm going to help you train your AI assistant so it can answer questions and book calls for you 24/7.
+    const loadConversation = async () => {
+      if (!user?.email || isInitialized) return;
+
+      const { data } = await supabase
+        .from('user_progress')
+        .select('ai_foundation_data, ai_foundation_complete, knowledge_base_content, bot_instructions')
+        .eq('user_email', user.email)
+        .maybeSingle();
+
+      if (data?.ai_foundation_complete && data?.knowledge_base_content && data?.bot_instructions) {
+        // Already completed - show outputs
+        setKnowledgeBase(data.knowledge_base_content);
+        setBotInstructions(data.bot_instructions);
+        setShowOutputs(true);
+        setIsInitialized(true);
+        return;
+      }
+
+      const savedData = data?.ai_foundation_data as unknown as SavedConversation | null;
+      
+      if (savedData?.messages && savedData.messages.length > 1) {
+        // Has in-progress conversation - show resume dialog
+        setSavedConversation(savedData);
+        setShowResumeDialog(true);
+      } else {
+        // Start fresh
+        startNewConversation();
+      }
+      setIsInitialized(true);
+    };
+
+    if (user && !loading) {
+      loadConversation();
+    }
+  }, [user, loading, isInitialized]);
+
+  const startNewConversation = () => {
+    const openingMessage = `Hey! I'm going to help you train your AI assistant so it can answer questions and book calls for you 24/7.
 
 This takes about 15-20 minutes. The more specific you are, the better your AI will represent you.
 
 Ready? Let's start with the basics.`;
-      setMessages([{ role: 'assistant', content: openingMessage }]);
+    setMessages([{ role: 'assistant', content: openingMessage }]);
+    setCurrentQuestion(0);
+    setShowResumeDialog(false);
+  };
+
+  const resumeConversation = () => {
+    if (savedConversation) {
+      setMessages(savedConversation.messages);
+      setCurrentQuestion(savedConversation.currentQuestion);
     }
-  }, [user]);
+    setShowResumeDialog(false);
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -198,11 +271,15 @@ Ready? Let's start with the basics.`;
       const data = await response.json();
       const assistantMessage = data.message || '';
       
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      const newMessages = [...messages, { role: 'user' as const, content: userMessage }, { role: 'assistant' as const, content: assistantMessage }];
+      setMessages(newMessages);
       
       // Update question counter (rough estimate based on message count)
-      const questionCount = Math.min(15, Math.floor(messages.length / 2) + 1);
+      const questionCount = Math.min(15, Math.floor(newMessages.length / 2));
       setCurrentQuestion(questionCount);
+
+      // Save conversation progress
+      await saveConversation(newMessages, questionCount);
 
       // Check if generation is complete
       if (assistantMessage.includes('GENERATION_COMPLETE')) {
@@ -339,7 +416,28 @@ Review them in the tabs below, then copy them to your clipboard when ready.`
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <>
+      {/* Resume Dialog */}
+      <Dialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Welcome back!</DialogTitle>
+            <DialogDescription>
+              You have an AI training session in progress. Would you like to continue where you left off?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button variant="outline" onClick={startNewConversation}>
+              Start Fresh
+            </Button>
+            <Button onClick={resumeConversation} className="bg-[#827666] hover:bg-[#6b5a4a]">
+              Continue Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3">
@@ -596,7 +694,8 @@ Review them in the tabs below, then copy them to your clipboard when ready.`
           </Button>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
