@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
 import { LocationIdModal } from '@/components/setup/LocationIdModal';
 import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, SETUP_ITEM_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
+import awakenLogo from '@/assets/awaken-logo-white.png';
 
 interface SetupProgress {
   profile_complete: boolean;
@@ -249,7 +250,7 @@ const Setup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#605547' }}>
       {/* Confetti overlay */}
       {confettiVisible && (
         <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
@@ -272,20 +273,23 @@ const Setup = () => {
       )}
 
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-10" style={{ backgroundColor: 'rgba(96, 85, 71, 0.9)' }}>
         <div className="max-w-3xl mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-2xl font-bold text-foreground">Ready for Business</h1>
-          <p className="text-muted-foreground mt-1">Five quick steps to handle any client inquiry professionally.</p>
+          <div className="flex items-center justify-between mb-4">
+            <img src={awakenLogo} alt="AwakenOS" className="h-8" />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-white hover:bg-white/10">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          <h1 className="text-2xl font-bold text-white">Ready for Business</h1>
+          <p className="text-white/70 mt-1">Five quick steps to handle any client inquiry professionally.</p>
         </div>
       </header>
 
       {/* Motivational Stat Banner */}
       <div className="max-w-3xl mx-auto px-4 pt-6">
-        <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+        <div className="bg-white rounded-lg p-4 flex items-start gap-3">
           <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-foreground">{PHASE_INTRO_STATS.phase1.stat}</p>
@@ -297,16 +301,16 @@ const Setup = () => {
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8">
         {/* Progress Section */}
-        <div className="mb-8">
+        <div className="mb-8 bg-white rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-semibold">{progressPercentage}% Complete</span>
+            <span className="text-lg font-semibold text-foreground">{progressPercentage}% Complete</span>
           </div>
           <Progress value={progressPercentage} className="h-3 mb-2" />
           <p className="text-sm text-muted-foreground">{getProgressMessage()}</p>
         </div>
 
         {/* Location ID Section */}
-        <div className="mb-6 p-4 bg-muted/50 rounded-lg flex items-center justify-between">
+        <div className="mb-6 p-4 bg-white rounded-lg flex items-center justify-between">
           <div>
             <span className="text-sm font-medium text-foreground">AwakenOS Location ID: </span>
             {progress.location_id ? (
@@ -336,8 +340,8 @@ const Setup = () => {
               <Card
                 key={item.id}
                 className={cn(
-                  'p-4 transition-all duration-200 cursor-pointer hover:shadow-md',
-                  isComplete && 'border-l-4 border-l-[#1fb14c] bg-[#1fb14c]/5'
+                  'p-4 transition-all duration-200 cursor-pointer hover:shadow-md bg-white',
+                  isComplete && 'border-l-4 border-l-[#1fb14c]'
                 )}
                 onClick={() => !isComplete && setActiveItem(item.id)}
               >
