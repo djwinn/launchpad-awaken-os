@@ -394,7 +394,7 @@ const AITraining = () => {
             }}>
               Back to Dashboard
             </Button>
-            <Button className="flex-1 bg-[#827666] hover:bg-[#6b5a4a]" onClick={() => {
+            <Button className="flex-1 bg-[#ebcc89] text-black hover:bg-[#d4b876]" onClick={() => {
               setShowCelebration(false);
               navigate('/funnel-builder');
             }}>

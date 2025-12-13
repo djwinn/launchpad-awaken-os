@@ -99,7 +99,7 @@ export function PhaseCard({
                 'flex-1 font-semibold',
                 isComplete
                   ? 'bg-[#56bc77]/10 text-[#56bc77] hover:bg-[#56bc77]/20 border border-[#56bc77]/30'
-                  : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
+                  : 'bg-[#ebcc89] text-black hover:bg-[#d4b876]'
               )}
               variant={isComplete ? 'outline' : 'default'}
             >
