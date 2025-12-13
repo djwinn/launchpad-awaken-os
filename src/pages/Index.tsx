@@ -3,12 +3,26 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { LandingPage } from '@/components/LandingPage';
 import { ChatInterface } from '@/components/ChatInterface';
 import { OutputView } from '@/components/OutputView';
+import { FunnelContextGathering } from '@/components/funnel-builder/FunnelContextGathering';
 import { useAuth } from '@/hooks/useAuth';
 import { findIncompleteConversation, createConversation } from '@/lib/conversations';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2, FileText, Plus, Home } from 'lucide-react';
 import type { Message, UserInfo, AppView } from '@/types/chat';
 import { Link } from 'react-router-dom';
+
+interface FunnelContext {
+  coach_name?: string;
+  coaching_type?: string;
+  ideal_client?: string;
+  main_problem?: string;
+  transformation?: string;
+  main_offer?: string;
+  booking_url?: string;
+  raw_content?: string;
+  source: 'paste' | 'conversation' | 'phase2';
+}
+
 const Index = () => {
   const {
     user,
@@ -26,6 +40,8 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(false);
+  const [funnelContext, setFunnelContext] = useState<FunnelContext | null>(null);
+  const [needsContextGathering, setNeedsContextGathering] = useState(false);
   const initializingRef = useRef(false);
 
   // When user logs in, initialize their conversation
@@ -43,20 +59,28 @@ const Index = () => {
       try {
         // Check for existing incomplete conversation
         const existing = await findIncompleteConversation(user.email);
-        if (existing) {
+        if (existing && existing.messages && existing.messages.length > 0) {
+          // Has existing messages - resume without context gathering
           console.log('Found existing conversation:', existing.id);
           setConversationId(existing.id);
           setMessages(existing.messages || []);
+          setNeedsContextGathering(false);
+          setView('chat');
         } else {
-          // Create new conversation
-          console.log('Creating new conversation for:', user.email);
-          const newId = await createConversation(user.email, name);
-          if (newId) {
-            console.log('Created conversation:', newId);
-            setConversationId(newId);
+          // New conversation - show context gathering first
+          console.log('New conversation - starting context gathering');
+          if (existing) {
+            setConversationId(existing.id);
+          } else {
+            const newId = await createConversation(user.email, name);
+            if (newId) {
+              console.log('Created conversation:', newId);
+              setConversationId(newId);
+            }
           }
+          setNeedsContextGathering(true);
+          setView('context');
         }
-        setView('chat');
       } catch (error) {
         console.error('Error initializing conversation:', error);
       } finally {
@@ -83,6 +107,11 @@ const Index = () => {
   const handleOutputComplete = () => {
     setView('output');
   };
+  const handleContextComplete = (context: FunnelContext) => {
+    setFunnelContext(context);
+    setNeedsContextGathering(false);
+    setView('chat');
+  };
   const handleStartOver = async () => {
     if (!user?.email) return;
     setInitializing(true);
@@ -91,7 +120,9 @@ const Index = () => {
     if (newId) {
       setConversationId(newId);
       setMessages([]);
-      setView('chat');
+      setFunnelContext(null);
+      setNeedsContextGathering(true);
+      setView('context');
     }
     setInitializing(false);
   };
@@ -104,6 +135,7 @@ const Index = () => {
     setUserInfo(null);
     setMessages([]);
     setConversationId(null);
+    setFunnelContext(null);
   };
 
   // Show landing page for unauthenticated users
@@ -119,6 +151,15 @@ const Index = () => {
   }
   if (!user || !userInfo) {
     return null;
+  }
+  if (view === 'context') {
+    return (
+      <FunnelContextGathering
+        userName={userInfo.name}
+        userEmail={userInfo.email}
+        onContextComplete={handleContextComplete}
+      />
+    );
   }
   if (view === 'output') {
     return <div className="relative">
@@ -162,7 +203,14 @@ const Index = () => {
           </Link>
         </Button>
       </div>
-      <ChatInterface userInfo={userInfo} messages={messages} setMessages={setMessages} onOutputComplete={handleOutputComplete} conversationId={conversationId} />
+      <ChatInterface 
+        userInfo={userInfo} 
+        messages={messages} 
+        setMessages={setMessages} 
+        onOutputComplete={handleOutputComplete} 
+        conversationId={conversationId}
+        funnelContext={funnelContext}
+      />
     </div>;
 };
 export default Index;

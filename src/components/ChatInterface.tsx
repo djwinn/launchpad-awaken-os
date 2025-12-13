@@ -14,12 +14,25 @@ import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 import botIcon from '@/assets/bot-icon.png';
 
+interface FunnelContext {
+  coach_name?: string;
+  coaching_type?: string;
+  ideal_client?: string;
+  main_problem?: string;
+  transformation?: string;
+  main_offer?: string;
+  booking_url?: string;
+  raw_content?: string;
+  source: 'paste' | 'conversation' | 'phase2';
+}
+
 interface ChatInterfaceProps {
   userInfo: UserInfo;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   onOutputComplete: () => void;
   conversationId: string | null;
+  funnelContext?: FunnelContext | null;
 }
 
 export function ChatInterface({
@@ -27,7 +40,8 @@ export function ChatInterface({
   messages,
   setMessages,
   onOutputComplete,
-  conversationId
+  conversationId,
+  funnelContext
 }: ChatInterfaceProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -232,10 +246,25 @@ export function ChatInterface({
     // Start the conversation with the AI
     const startConversation = async () => {
       setIsLoading(true);
+      
+      // Build initial message with context if available
+      let initialContent = `Hi, my name is ${userInfo.name}. I'm here to create my mini-funnel.`;
+      
+      if (funnelContext) {
+        initialContent = `Hi, my name is ${userInfo.name}. I'm here to create my mini-funnel.\n\n`;
+        initialContent += `Here's what I know about my business:\n`;
+        if (funnelContext.coaching_type) initialContent += `- I'm a ${funnelContext.coaching_type}\n`;
+        if (funnelContext.ideal_client) initialContent += `- I help: ${funnelContext.ideal_client}\n`;
+        if (funnelContext.main_problem) initialContent += `- Main problem they have: ${funnelContext.main_problem}\n`;
+        if (funnelContext.transformation) initialContent += `- Transformation I provide: ${funnelContext.transformation}\n`;
+        if (funnelContext.main_offer) initialContent += `- My main offer: ${funnelContext.main_offer}\n`;
+        if (funnelContext.booking_url) initialContent += `- Booking link: ${funnelContext.booking_url}\n`;
+      }
+      
       const initialMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: `Hi, my name is ${userInfo.name}. I'm here to create my mini-funnel.`
+        content: initialContent
       };
       let assistantContent = '';
       const assistantId = crypto.randomUUID();
