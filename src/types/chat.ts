@@ -21,4 +21,4 @@ export interface Conversation {
   updated_at: string;
 }
 
-export type AppView = 'landing' | 'chat' | 'output';
+export type AppView = 'landing' | 'context' | 'chat' | 'output';
