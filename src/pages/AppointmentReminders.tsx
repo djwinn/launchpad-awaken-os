@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ArrowLeft, Loader2, Copy, Check, ChevronDown, ExternalLink, Mail, Clock, Bell, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Copy, Check, ChevronDown, ExternalLink, Mail, Clock, Bell, AlertCircle, TrendingUp, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { AI_TRAINING_MOTIVATION, PHASE2_CELEBRATION } from '@/lib/motivational-content';
 
 const TEMPLATES = {
   confirmation: {
@@ -213,34 +214,31 @@ const AppointmentReminders = () => {
       <Dialog open={showCompletionModal} onOpenChange={setShowCompletionModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-center">Your Conversion Protection is Complete! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl text-center">{PHASE2_CELEBRATION.headline} 🎉</DialogTitle>
             <DialogDescription className="text-center text-base mt-2">
               Your AI responds instantly, and your reminders reduce no-shows by up to 50%.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 my-6">
-            {[
-              'AI trained on your business',
-              'AI responder active',
-              'Appointment reminders configured',
-            ].map((text, i) => (
+          <div className="space-y-3 my-4">
+            <p className="text-sm font-medium text-foreground">Here's what you just put in place:</p>
+            {PHASE2_CELEBRATION.stats.map((stat, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#1fb14c] flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-foreground">{text}</span>
+                <span className="text-sm text-foreground">{stat}</span>
               </div>
             ))}
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4 mb-4">
-            <p className="text-sm text-foreground font-medium mb-2">The Transformation:</p>
-            <p className="text-sm text-muted-foreground">
-              You've gone from "I hope I don't miss anything" to "the system has my back."
-              Inquiries get instant responses. Bookings get reminders. You're not leaving money on the table anymore.
-            </p>
+            <p className="text-sm text-muted-foreground">{PHASE2_CELEBRATION.transformation}</p>
           </div>
+
+          <p className="text-sm italic text-muted-foreground text-center mb-4">
+            "{PHASE2_CELEBRATION.quote}"
+          </p>
 
           <p className="text-sm text-muted-foreground text-center mb-4">
             Ready to bring more clients in? Build landing pages, lead magnets, and email sequences that attract the right people to you.
@@ -277,6 +275,15 @@ const AppointmentReminders = () => {
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {/* Motivational Stat Banner */}
+        <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+          <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">{AI_TRAINING_MOTIVATION.reminders_configured.stat}</p>
+            <p className="text-sm text-muted-foreground">{AI_TRAINING_MOTIVATION.reminders_configured.before}</p>
+          </div>
+        </div>
+
         {/* The Problem Section */}
         <section className="space-y-4">
           <p className="text-muted-foreground">

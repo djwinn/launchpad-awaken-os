@@ -11,12 +11,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, Pencil } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, Pencil, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
 import { LocationIdModal } from '@/components/setup/LocationIdModal';
+import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 
 interface SetupProgress {
   profile_complete: boolean;
@@ -163,7 +164,7 @@ const Setup = () => {
 
     toast({
       title: "Step completed!",
-      description: `${setupItems.find(i => i.id === itemId)?.title} is done.`,
+      description: getRandomCompletionMessage(),
     });
 
     // Check if all complete
@@ -281,6 +282,17 @@ const Setup = () => {
           <p className="text-muted-foreground mt-1">Five quick steps to handle any client inquiry professionally.</p>
         </div>
       </header>
+
+      {/* Motivational Stat Banner */}
+      <div className="max-w-3xl mx-auto px-4 pt-6">
+        <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+          <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">{PHASE_INTRO_STATS.phase1.stat}</p>
+            <p className="text-sm text-muted-foreground">{PHASE_INTRO_STATS.phase1.message}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8">
@@ -414,7 +426,7 @@ const Setup = () => {
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-center">You're Ready for Business! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl text-center">{PHASE1_CELEBRATION.headline} 🎉</DialogTitle>
             <DialogDescription className="text-center text-base mt-2">
               Someone could find you, book a call, sign a contract, and pay you — all handled professionally.
             </DialogDescription>
@@ -437,8 +449,12 @@ const Setup = () => {
             ))}
           </div>
 
-          <p className="text-sm text-muted-foreground text-center mb-4">
-            Ready for the next step? Set up your 24/7 AI assistant to handle inquiries while you sleep.
+          <div className="bg-muted/50 rounded-lg p-4 mb-4">
+            <p className="text-sm text-muted-foreground">{PHASE1_CELEBRATION.supportingStat}</p>
+          </div>
+
+          <p className="text-sm italic text-muted-foreground text-center mb-4">
+            "{PHASE1_CELEBRATION.quote}"
           </p>
 
           <div className="flex gap-3">
