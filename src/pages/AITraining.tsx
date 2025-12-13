@@ -249,8 +249,8 @@ const AITraining = () => {
                       navigate('/ai-training/builder');
                     } else if (item.id === 'ai_responder_active') {
                       navigate('/ai-training/activate');
-                    } else {
-                      setActiveItem(item.id);
+                    } else if (item.id === 'reminders_configured') {
+                      navigate('/ai-training/reminders');
                     }
                   }
                 }}
@@ -303,8 +303,8 @@ const AITraining = () => {
                             navigate('/ai-training/builder');
                           } else if (item.id === 'ai_responder_active') {
                             navigate('/ai-training/activate');
-                          } else {
-                            setActiveItem(item.id);
+                          } else if (item.id === 'reminders_configured') {
+                            navigate('/ai-training/reminders');
                           }
                         }
                       }}
