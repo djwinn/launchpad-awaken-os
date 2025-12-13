@@ -36,7 +36,7 @@ export function PhaseCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all duration-300 hover:shadow-lg bg-white',
+        'relative overflow-hidden transition-all duration-300 hover:shadow-lg bg-white h-full flex flex-col',
         isComplete && 'border border-[#1fb14c]/40'
       )}
     >
@@ -72,47 +72,49 @@ export function PhaseCard({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <p className="text-muted-foreground leading-relaxed">{description}</p>
+      <CardContent className="flex flex-col flex-1">
+        <p className="text-muted-foreground leading-relaxed flex-1">{description}</p>
 
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{timeEstimate}</span>
-          {progress && (
-            <span className="text-muted-foreground">
-              {progress.current}/{progress.total} complete
-            </span>
-          )}
-        </div>
-
-        {progress && (
-          <Progress
-            value={(progress.current / progress.total) * 100}
-            className="h-2"
-          />
-        )}
-
-        <div className={cn('flex flex-col gap-2', !secondaryButtonLabel && 'flex-row')}>
-          <Button
-            onClick={onClick}
-            className={cn(
-              'flex-1 font-semibold',
-              isComplete
-                ? 'bg-[#1fb14c]/10 text-[#1fb14c] hover:bg-[#1fb14c]/20 border border-[#1fb14c]/30'
-                : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
+        <div className="mt-4 space-y-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{timeEstimate}</span>
+            {progress && (
+              <span className="text-muted-foreground">
+                {progress.current}/{progress.total} complete
+              </span>
             )}
-            variant={isComplete ? 'outline' : 'default'}
-          >
-            {buttonLabel}
-          </Button>
-          {secondaryButtonLabel && onSecondaryClick && (
-            <Button
-              onClick={onSecondaryClick}
-              variant="outline"
-              className="flex-1 font-semibold"
-            >
-              {secondaryButtonLabel}
-            </Button>
+          </div>
+
+          {progress && (
+            <Progress
+              value={(progress.current / progress.total) * 100}
+              className="h-2"
+            />
           )}
+
+          <div className={cn('flex flex-col gap-2', !secondaryButtonLabel && 'flex-row')}>
+            <Button
+              onClick={onClick}
+              className={cn(
+                'flex-1 font-semibold',
+                isComplete
+                  ? 'bg-[#1fb14c]/10 text-[#1fb14c] hover:bg-[#1fb14c]/20 border border-[#1fb14c]/30'
+                  : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
+              )}
+              variant={isComplete ? 'outline' : 'default'}
+            >
+              {buttonLabel}
+            </Button>
+            {secondaryButtonLabel && onSecondaryClick && (
+              <Button
+                onClick={onSecondaryClick}
+                variant="outline"
+                className="flex-1 font-semibold"
+              >
+                {secondaryButtonLabel}
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
