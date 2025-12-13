@@ -254,8 +254,8 @@ const AITraining = () => {
               <Card
                 key={item.id}
                 className={cn(
-                  'p-4 transition-all duration-200 bg-white',
-                  isComplete && 'border-l-4 border-l-[#1fb14c]',
+                  'transition-all duration-200 bg-white overflow-hidden',
+                  isComplete && 'border border-[#1fb14c]/30',
                   isLocked && 'opacity-60',
                   !isComplete && !isLocked && 'cursor-pointer hover:shadow-md'
                 )}
@@ -271,64 +271,77 @@ const AITraining = () => {
                   }
                 }}
               >
-                <div className="flex items-center gap-4">
-                  {/* Status Icon */}
-                  <div className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative',
-                    isComplete ? 'bg-[#1fb14c]' : isLocked ? 'bg-muted' : 'bg-[#827666]/10'
-                  )}>
-                    {isComplete ? (
-                      <Check className="w-5 h-5 text-white" />
-                    ) : isLocked ? (
-                      <Lock className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Icon className="w-5 h-5 text-[#827666]" />
-                    )}
+                {/* Green header bar for completed items */}
+                {isComplete && (
+                  <div className="bg-[#1fb14c] px-4 py-2 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium text-white">Completed</span>
                   </div>
+                )}
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-foreground">{item.title}</h3>
-                      <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
-                        {item.time}
-                      </span>
-                    </div>
-                    {isComplete ? (
-                      <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
-                    ) : isLocked && 'lockedText' in item ? (
-                      <p className="text-sm text-muted-foreground mt-0.5">{item.lockedText}</p>
-                    ) : (
-                      <p className="text-sm text-[#827666] font-medium mt-0.5">
-                        {AI_TRAINING_MOTIVATION[item.id as keyof typeof AI_TRAINING_MOTIVATION]?.cardStat}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Action Button */}
-                  {!isLocked && (
-                    <Button
-                      variant={isComplete ? 'outline' : 'default'}
-                      size="sm"
-                      className={cn(
-                        isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                <div className="p-4">
+                  <div className="flex items-center gap-4">
+                    {/* Status Icon */}
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative',
+                      isComplete ? 'bg-[#1fb14c]/10' : isLocked ? 'bg-muted' : 'bg-[#827666]/10'
+                    )}>
+                      {isComplete ? (
+                        <Check className="w-5 h-5 text-[#1fb14c]" />
+                      ) : isLocked ? (
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Icon className="w-5 h-5 text-[#827666]" />
                       )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isLocked) {
-                          if (item.id === 'ai_foundation_complete') {
-                            navigate('/ai-training/builder');
-                          } else if (item.id === 'ai_responder_active') {
-                            navigate('/ai-training/activate');
-                          } else if (item.id === 'reminders_configured') {
-                            navigate('/ai-training/reminders');
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={cn(
+                          "font-semibold",
+                          isComplete ? "text-[#1fb14c]" : "text-foreground"
+                        )}>{item.title}</h3>
+                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
+                          {item.time}
+                        </span>
+                      </div>
+                      {isComplete ? (
+                        <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
+                      ) : isLocked && 'lockedText' in item ? (
+                        <p className="text-sm text-muted-foreground mt-0.5">{item.lockedText}</p>
+                      ) : (
+                        <p className="text-sm text-[#827666] font-medium mt-0.5">
+                          {AI_TRAINING_MOTIVATION[item.id as keyof typeof AI_TRAINING_MOTIVATION]?.cardStat}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Button */}
+                    {!isLocked && (
+                      <Button
+                        variant={isComplete ? 'outline' : 'default'}
+                        size="sm"
+                        className={cn(
+                          isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isLocked) {
+                            if (item.id === 'ai_foundation_complete') {
+                              navigate('/ai-training/builder');
+                            } else if (item.id === 'ai_responder_active') {
+                              navigate('/ai-training/activate');
+                            } else if (item.id === 'reminders_configured') {
+                              navigate('/ai-training/reminders');
+                            }
                           }
-                        }
-                      }}
-                    >
-                      {isComplete ? 'Review' : 'Start'}
-                    </Button>
-                  )}
+                        }}
+                      >
+                        {isComplete ? 'Review' : 'Start'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
