@@ -169,19 +169,19 @@ const AIResponderActivation = () => {
               <p className="text-sm font-medium text-foreground">What's Now Active:</p>
               <ul className="space-y-1.5">
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 text-[#1fb14c]" />
+                  <Check className="h-4 w-4 text-[#56bc77]" />
                   Knowledge Base with your business info
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 text-[#1fb14c]" />
+                  <Check className="h-4 w-4 text-[#56bc77]" />
                   AI bot trained on your style
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 text-[#1fb14c]" />
+                  <Check className="h-4 w-4 text-[#56bc77]" />
                   Connected to {selectedChannels.map(c => CHANNELS.find(ch => ch.id === c)?.label).join(', ')}
                 </li>
                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Check className="h-4 w-4 text-[#1fb14c]" />
+                  <Check className="h-4 w-4 text-[#56bc77]" />
                   Auto-pilot mode enabled
                 </li>
               </ul>
@@ -241,14 +241,14 @@ const AIResponderActivation = () => {
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-lg transition-colors min-w-max',
                       isCurrent && 'bg-[#827666]/10 text-[#827666]',
-                      isCompleted && !isCurrent && 'text-[#1fb14c]',
+                      isCompleted && !isCurrent && 'text-[#56bc77]',
                       !isCurrent && !isCompleted && 'text-muted-foreground'
                     )}
                   >
                     <div className={cn(
                       'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium',
                       isCurrent && 'bg-[#827666] text-white',
-                      isCompleted && !isCurrent && 'bg-[#1fb14c] text-white',
+                      isCompleted && !isCurrent && 'bg-[#56bc77] text-white',
                       !isCurrent && !isCompleted && 'bg-muted text-muted-foreground'
                     )}>
                       {isCompleted ? <Check className="h-3 w-3" /> : step.id}

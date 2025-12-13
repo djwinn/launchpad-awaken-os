@@ -121,7 +121,7 @@ export function LandingPage({
             <ul className="space-y-4">
               {benefits.map((benefit, index) => <li key={index} className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5" style={{
-                backgroundColor: '#1fb14c'
+                backgroundColor: '#56bc77'
               }}>
                     <Check className="w-4 h-4 text-white" />
                   </div>

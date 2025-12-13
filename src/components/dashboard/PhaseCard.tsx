@@ -37,12 +37,12 @@ export function PhaseCard({
     <Card
       className={cn(
         'relative overflow-hidden transition-all duration-300 hover:shadow-lg bg-white h-full flex flex-col',
-        isComplete && 'border border-[#1fb14c]/40'
+        isComplete && 'border border-[#56bc77]/40'
       )}
     >
       {isComplete && (
         <div className="absolute top-4 right-4">
-          <div className="w-8 h-8 rounded-full bg-[#1fb14c] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#56bc77] flex items-center justify-center">
             <Check className="w-5 h-5 text-white" />
           </div>
         </div>
@@ -53,13 +53,13 @@ export function PhaseCard({
           <div
             className={cn(
               'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
-              isComplete ? 'bg-[#1fb14c]/10' : 'bg-[#827666]/10'
+              isComplete ? 'bg-[#56bc77]/10' : 'bg-[#827666]/10'
             )}
           >
             <Icon
               className={cn(
                 'w-6 h-6',
-                isComplete ? 'text-[#1fb14c]' : 'text-[#827666]'
+                isComplete ? 'text-[#56bc77]' : 'text-[#827666]'
               )}
             />
           </div>
@@ -98,7 +98,7 @@ export function PhaseCard({
               className={cn(
                 'flex-1 font-semibold',
                 isComplete
-                  ? 'bg-[#1fb14c]/10 text-[#1fb14c] hover:bg-[#1fb14c]/20 border border-[#1fb14c]/30'
+                  ? 'bg-[#56bc77]/10 text-[#56bc77] hover:bg-[#56bc77]/20 border border-[#56bc77]/30'
                   : 'bg-[#827666] text-white hover:bg-[#6b5a4a]'
               )}
               variant={isComplete ? 'outline' : 'default'}
