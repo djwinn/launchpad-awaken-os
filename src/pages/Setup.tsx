@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
 import { LocationIdModal } from '@/components/setup/LocationIdModal';
-import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, getRandomCompletionMessage } from '@/lib/motivational-content';
+import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, SETUP_ITEM_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 
 interface SetupProgress {
   profile_complete: boolean;
@@ -362,9 +362,13 @@ const Setup = () => {
                         {item.time}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {isComplete ? item.completedText : item.helperText}
-                    </p>
+                    {isComplete ? (
+                      <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
+                    ) : (
+                      <p className="text-sm text-[#827666] font-medium mt-0.5">
+                        {SETUP_ITEM_MOTIVATION[item.id as keyof typeof SETUP_ITEM_MOTIVATION]?.cardStat}
+                      </p>
+                    )}
                   </div>
 
                   {/* Action Button */}
