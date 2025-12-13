@@ -23,25 +23,30 @@ export const PHASE_INTRO_STATS = {
   },
 } as const;
 
-// Phase 1 Setup Items
+// Phase 1 Setup Items - Card-visible stats
 export const SETUP_ITEM_MOTIVATION = {
   profile_complete: {
+    cardStat: "Clients decide if they trust you before you say a word.",
     before: "Clients form lasting opinions from your first contact. A complete profile signals you're ready for business.",
     after: "Done! You now look as professional as you are.",
   },
   calendar_connected: {
+    cardStat: "23% of interested prospects drop off during back-and-forth scheduling.",
     before: "The back-and-forth of scheduling emails loses 23% of interested prospects before they ever book.",
     after: "No more 'when are you free?' emails. Clients book themselves.",
   },
   booking_page_created: {
+    cardStat: "A booking link lets clients say yes at 2am — without waiting for you.",
     before: "Every friction point between 'I'm interested' and 'I'm booked' costs you clients. A booking page removes all of them.",
     after: "You now have a 24/7 booking system. Clients can book you at 2am while you sleep.",
   },
   contract_prepared: {
+    cardStat: "Clear agreements prevent 90% of client disputes.",
     before: "Clear agreements prevent 90% of client disputes. Protect yourself and set expectations upfront.",
     after: "Professional, protected, and ready to sign clients with confidence.",
   },
   payments_connected: {
+    cardStat: "The #1 reason coaches don't get paid on time? No system.",
     before: "The #1 reason coaches don't get paid on time? No system. Fix it in 5 minutes.",
     after: "You can now get paid the moment someone says yes. No awkward invoicing.",
   },
@@ -53,14 +58,16 @@ export const PHASE1_CELEBRATION = {
   quote: "Professionalism isn't about being corporate. It's about making it easy for people to trust you.",
 } as const;
 
-// Phase 2 AI Training Items
+// Phase 2 AI Training Items - Card-visible stats
 export const AI_TRAINING_MOTIVATION = {
   ai_foundation_complete: {
+    cardStat: "The average business takes 42 hours to respond. Yours will respond in seconds.",
     before: "The average business takes 42 hours to respond to an inquiry. By then, your potential client has moved on.",
     midConversation: "You're doing great. The more detail you share, the more your AI will sound like you — not a robot.",
     after: "Your AI now knows your business as well as you do.",
   },
   ai_responder_active: {
+    cardStat: "Responding in 5 minutes makes you 21x more likely to convert a lead.",
     stat: "Responding within 5 minutes makes you 21x more likely to convert a lead.",
     before: "Your AI responds instantly. That's your new competitive advantage.",
     context: "While other coaches are sleeping, on calls, or at dinner — your AI is answering questions and booking calls.",
@@ -68,6 +75,7 @@ export const AI_TRAINING_MOTIVATION = {
     celebration: "You just solved the #1 conversion killer for coaches: slow response time.",
   },
   reminders_configured: {
+    cardStat: "SMS reminders reduce no-shows by 38%.",
     stat: "SMS reminders reduce no-shows by 38%.",
     before: "That's roughly 1 in 3 missed calls you'll now save.",
     context: "No-shows cost you time, energy, and momentum. A simple reminder protects all three.",

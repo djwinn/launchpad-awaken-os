@@ -16,7 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AITrainingItemModal } from '@/components/setup/AITrainingItemModal';
-import { PHASE_INTRO_STATS, PHASE2_CELEBRATION, getRandomCompletionMessage } from '@/lib/motivational-content';
+import { PHASE_INTRO_STATS, PHASE2_CELEBRATION, AI_TRAINING_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 
 interface AIProgress {
   ai_foundation_complete: boolean;
@@ -290,14 +290,15 @@ const AITraining = () => {
                         {item.time}
                       </span>
                     </div>
-                    <p className="text-sm text-[#827666] mt-0.5">{item.subtitle}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {isComplete 
-                        ? item.completedText 
-                        : isLocked && 'lockedText' in item 
-                          ? item.lockedText 
-                          : item.helperText}
-                    </p>
+                    {isComplete ? (
+                      <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
+                    ) : isLocked && 'lockedText' in item ? (
+                      <p className="text-sm text-muted-foreground mt-0.5">{item.lockedText}</p>
+                    ) : (
+                      <p className="text-sm text-[#827666] font-medium mt-0.5">
+                        {AI_TRAINING_MOTIVATION[item.id as keyof typeof AI_TRAINING_MOTIVATION]?.cardStat}
+                      </p>
+                    )}
                   </div>
 
                   {/* Action Button */}
