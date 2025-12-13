@@ -11,11 +11,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Circle, Lock, Brain, Zap, Bell } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, Lock, Brain, Zap, Bell, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { AITrainingItemModal } from '@/components/setup/AITrainingItemModal';
+import { PHASE_INTRO_STATS, PHASE2_CELEBRATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 
 interface AIProgress {
   ai_foundation_complete: boolean;
@@ -138,7 +139,7 @@ const AITraining = () => {
 
     toast({
       title: "Step completed!",
-      description: `${aiItems.find(i => i.id === itemId)?.title} is done.`,
+      description: getRandomCompletionMessage(),
     });
 
     // Check if all complete
@@ -214,6 +215,17 @@ const AITraining = () => {
           <p className="text-muted-foreground mt-1">Train your AI, activate it, and protect your bookings.</p>
         </div>
       </header>
+
+      {/* Motivational Stat Banner */}
+      <div className="max-w-3xl mx-auto px-4 pt-6">
+        <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+          <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-foreground">{PHASE_INTRO_STATS.phase2.stat}</p>
+            <p className="text-sm text-muted-foreground">{PHASE_INTRO_STATS.phase2.message}</p>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-3xl mx-auto px-4 py-8">
@@ -331,29 +343,30 @@ const AITraining = () => {
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-center">Your Conversion Protection is Complete! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl text-center">{PHASE2_CELEBRATION.headline} 🎉</DialogTitle>
             <DialogDescription className="text-center text-base mt-2">
               Your AI responds instantly, and your reminders reduce no-shows by up to 50%
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 my-6">
-            {[
-              'AI trained on your business',
-              'AI responder active',
-              'Appointment reminders configured',
-            ].map((text, i) => (
+          <div className="space-y-3 my-4">
+            <p className="text-sm font-medium text-foreground">Here's what you just put in place:</p>
+            {PHASE2_CELEBRATION.stats.map((stat, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#1fb14c] flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-foreground">{text}</span>
+                <span className="text-sm text-foreground">{stat}</span>
               </div>
             ))}
           </div>
 
-          <p className="text-sm text-muted-foreground text-center mb-4">
-            Ready to generate leads? Build landing pages and lead magnets that bring clients to you.
+          <div className="bg-muted/50 rounded-lg p-4 mb-4">
+            <p className="text-sm text-muted-foreground">{PHASE2_CELEBRATION.transformation}</p>
+          </div>
+
+          <p className="text-sm italic text-muted-foreground text-center mb-4">
+            "{PHASE2_CELEBRATION.quote}"
           </p>
 
           <div className="flex gap-3">

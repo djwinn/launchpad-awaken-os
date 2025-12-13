@@ -13,11 +13,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check, Copy, Send, Loader2 } from 'lucide-react';
+import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check, Copy, Send, Loader2, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MarkdownContent } from '@/components/MarkdownContent';
+import { SETUP_ITEM_MOTIVATION } from '@/lib/motivational-content';
 
 interface SetupItemModalProps {
   itemId: string | null;
@@ -391,6 +392,18 @@ After generating, say: "Review it above and make any edits you need. When you're
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
+          {/* Motivational Message */}
+          {itemId && SETUP_ITEM_MOTIVATION[itemId as keyof typeof SETUP_ITEM_MOTIVATION] && (
+            <div className="px-6 py-4 border-b border-border">
+              <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+                <Lightbulb className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  {SETUP_ITEM_MOTIVATION[itemId as keyof typeof SETUP_ITEM_MOTIVATION].before}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Video Placeholder */}
           <div className="px-6 py-4 border-b border-border">
             <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center">

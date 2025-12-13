@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, ArrowRight, MessageSquare, CheckCircle2, Edit3, Home, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, MessageSquare, CheckCircle2, Edit3, Home, Sparkles, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import botIcon from '@/assets/bot-icon.png';
+import { PHASE_INTRO_STATS } from '@/lib/motivational-content';
 
 interface FunnelContext {
   coach_name?: string;
@@ -469,6 +470,15 @@ export function FunnelContextGathering({ userName, userEmail, onContextComplete 
 
       <ScrollArea className="flex-1">
         <div className="max-w-2xl mx-auto py-8 px-4">
+          {/* Motivational Stat Banner */}
+          <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3 mb-6">
+            <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-foreground">{PHASE_INTRO_STATS.phase3.stat}</p>
+              <p className="text-sm text-muted-foreground">{PHASE_INTRO_STATS.phase3.message}</p>
+            </div>
+          </div>
+
           {hasPhase2Data && (
             <Card className="mb-6 border-primary/20 bg-primary/5">
               <CardContent className="pt-6">

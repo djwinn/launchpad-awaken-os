@@ -1,4 +1,5 @@
 import { Progress } from '@/components/ui/progress';
+import { getDashboardQuote } from '@/lib/motivational-content';
 
 interface ProgressHeaderProps {
   firstName: string;
@@ -7,6 +8,8 @@ interface ProgressHeaderProps {
 }
 
 export function ProgressHeader({ firstName, percentage, message }: ProgressHeaderProps) {
+  const quote = getDashboardQuote(percentage);
+
   return (
     <div className="space-y-6">
       <div className="text-center md:text-left">
@@ -26,6 +29,9 @@ export function ProgressHeader({ firstName, percentage, message }: ProgressHeade
           <span className="text-muted-foreground">{message}</span>
         </div>
         <Progress value={percentage} className="h-3" />
+        <p className="text-sm text-muted-foreground italic mt-3">
+          "{quote}"
+        </p>
       </div>
     </div>
   );
