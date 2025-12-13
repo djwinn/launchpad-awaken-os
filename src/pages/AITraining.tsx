@@ -195,7 +195,7 @@ const AITraining = () => {
                 left: `${Math.random() * 100}%`,
                 top: '-10px',
                 animationDelay: `${Math.random() * 0.5}s`,
-                backgroundColor: ['#1fb14c', '#827666', '#fbbf24', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                backgroundColor: ['#56bc77', '#827666', '#fbbf24', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)],
                 width: '10px',
                 height: '10px',
                 borderRadius: Math.random() > 0.5 ? '50%' : '0',
@@ -255,7 +255,7 @@ const AITraining = () => {
                 key={item.id}
                 className={cn(
                   'transition-all duration-200 bg-white overflow-hidden',
-                  isComplete && 'border border-[#1fb14c]/30',
+                  isComplete && 'border border-[#56bc77]/30',
                   isLocked && 'opacity-60',
                   !isComplete && !isLocked && 'cursor-pointer hover:shadow-md'
                 )}
@@ -273,7 +273,7 @@ const AITraining = () => {
               >
                 {/* Green header bar for completed items */}
                 {isComplete && (
-                  <div className="bg-[#1fb14c] px-4 py-2 flex items-center gap-2">
+                  <div className="bg-[#56bc77] px-4 py-2 flex items-center gap-2">
                     <Check className="w-4 h-4 text-white" />
                     <span className="text-sm font-medium text-white">Completed</span>
                   </div>
@@ -284,10 +284,10 @@ const AITraining = () => {
                     {/* Status Icon */}
                     <div className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative',
-                      isComplete ? 'bg-[#1fb14c]/10' : isLocked ? 'bg-muted' : 'bg-[#827666]/10'
+                      isComplete ? 'bg-[#56bc77]/10' : isLocked ? 'bg-muted' : 'bg-[#827666]/10'
                     )}>
                       {isComplete ? (
-                        <Check className="w-5 h-5 text-[#1fb14c]" />
+                        <Check className="w-5 h-5 text-[#56bc77]" />
                       ) : isLocked ? (
                         <Lock className="w-4 h-4 text-muted-foreground" />
                       ) : (
@@ -300,7 +300,7 @@ const AITraining = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className={cn(
                           "font-semibold",
-                          isComplete ? "text-[#1fb14c]" : "text-foreground"
+                          isComplete ? "text-[#56bc77]" : "text-foreground"
                         )}>{item.title}</h3>
                         <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
                           {item.time}
@@ -323,7 +323,7 @@ const AITraining = () => {
                         variant={isComplete ? 'outline' : 'default'}
                         size="sm"
                         className={cn(
-                          isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                          isComplete && 'text-[#56bc77] border-[#56bc77]/30'
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -371,7 +371,7 @@ const AITraining = () => {
             <p className="text-sm font-medium text-foreground">Here's what you just put in place:</p>
             {PHASE2_CELEBRATION.stats.map((stat, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#1fb14c] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-[#56bc77] flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm text-foreground">{stat}</span>

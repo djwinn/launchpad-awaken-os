@@ -368,7 +368,7 @@ After generating, say: "Review it above and make any edits you need. When you're
         {/* Success Overlay */}
         {showSuccess && (
           <div className="absolute inset-0 bg-background/95 z-50 flex flex-col items-center justify-center animate-fade-in">
-            <div className="w-16 h-16 rounded-full bg-[#1fb14c] flex items-center justify-center mb-4 animate-scale-in">
+            <div className="w-16 h-16 rounded-full bg-[#56bc77] flex items-center justify-center mb-4 animate-scale-in">
               <Check className="w-8 h-8 text-white" />
             </div>
             <p className="text-lg font-semibold text-foreground text-center px-6">{config.completionMessage}</p>
@@ -603,7 +603,7 @@ After generating, say: "Review it above and make any edits you need. When you're
                 disabled={isCompleting || !canComplete}
                 className={cn(
                   'w-full',
-                  isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                  isComplete && 'text-[#56bc77] border-[#56bc77]/30'
                 )}
               >
                 {isCompleting ? (

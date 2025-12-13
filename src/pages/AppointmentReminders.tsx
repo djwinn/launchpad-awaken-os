@@ -200,7 +200,7 @@ const AppointmentReminders = () => {
                 left: `${Math.random() * 100}%`,
                 top: '-10px',
                 animationDelay: `${Math.random() * 0.5}s`,
-                backgroundColor: ['#1fb14c', '#827666', '#fbbf24', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)],
+                backgroundColor: ['#56bc77', '#827666', '#fbbf24', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)],
                 width: '10px',
                 height: '10px',
                 borderRadius: Math.random() > 0.5 ? '50%' : '0',
@@ -224,7 +224,7 @@ const AppointmentReminders = () => {
             <p className="text-sm font-medium text-foreground">Here's what you just put in place:</p>
             {PHASE2_CELEBRATION.stats.map((stat, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#1fb14c] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-[#56bc77] flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm text-foreground">{stat}</span>
@@ -493,7 +493,7 @@ const AppointmentReminders = () => {
           </div>
 
           {hasAtLeastOneReminder && (
-            <p className="text-sm text-[#1fb14c]">
+            <p className="text-sm text-[#56bc77]">
               Great start! You can always add more reminders later.
             </p>
           )}
