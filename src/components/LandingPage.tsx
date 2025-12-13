@@ -4,23 +4,43 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Check } from 'lucide-react';
+import { Check, Calendar, Bot, Bell, Target, Link } from 'lucide-react';
 import { z } from 'zod';
 import awakenLogo from '@/assets/awaken-logo-white.png';
+
 interface LandingPageProps {
   onStartClick: (name: string, email: string) => void;
   className?: string;
 }
+
 const emailSchema = z.string().trim().email({
   message: "Please enter a valid email address"
 });
+
 const benefits = [
-  { bold: "Lead magnet", rest: "Builds your list while you sleep — full content, not just an outline" },
-  { bold: "Landing page", rest: "Copy so specific your ideal client thinks \"this is exactly me\"" },
-  { bold: "10 nurture emails", rest: "Turn cold leads into booked calls — without you writing a word" },
-  { bold: "Your offer", rest: "Pitch it in 30 seconds and actually get a yes" },
-  { bold: "Booking page", rest: "Pre-sells the call before they even show up" },
-  { bold: "Ready to publish", rest: "Paste straight into your AwakenOS templates — go live the same day" }
+  { bold: "Ready to receive clients", rest: "Calendar, booking page, contracts, and payments — so when someone wants to work with you, you're ready." },
+  { bold: "AI that responds 24/7", rest: "Trained on your voice, your services, your style — answering questions and booking calls while you sleep." },
+  { bold: "Reminders that protect your bookings", rest: "Reduce no-shows by up to 50% with automatic SMS and email reminders." },
+  { bold: "A complete funnel to attract clients", rest: "Lead magnet, landing page, nurture emails, and offer — all written for you." },
+  { bold: "One connected system", rest: "No more juggling scattered tools. Everything works together." }
+];
+
+const phases = [
+  { 
+    title: "Ready for Business", 
+    time: "~17 minutes",
+    description: "Book, sign, and get paid professionally. Calendar, booking page, contracts, and payments."
+  },
+  { 
+    title: "Your 24/7 Assistant", 
+    time: "~35 minutes",
+    description: "Train an AI that sounds like you. It handles inquiries and books calls while you sleep."
+  },
+  { 
+    title: "Client Magnet", 
+    time: "~30 minutes",
+    description: "Build landing pages, lead magnets, and emails that bring the right people to you."
+  }
 ];
 export function LandingPage({
   onStartClick,
@@ -69,16 +89,16 @@ export function LandingPage({
           </div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white">
-            Your Entire Client-Getting System,
+            From Scattered to Systemized
           </h1>
           <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2 text-white">
-            Built in One Conversation
+            In One Afternoon
           </p>
           
           <p style={{
           color: '#d4d4d4'
         }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-            A guided AI conversation that turns what you know into a complete mini-funnel — lead magnet, landing pages, emails, and offer — in less than 30 minutes.
+            A guided setup that gives you everything you need to receive inquiries, respond instantly, and convert them into paying clients — without the tech overwhelm.
           </p>
         </div>
       </section>
@@ -113,9 +133,9 @@ export function LandingPage({
           {/* CTA Card */}
           <Card className="border-border/50 shadow-lg h-full rounded-xl">
             <CardHeader className="space-y-1 pb-4">
-              <CardTitle className="text-2xl md:text-3xl font-bold">Start Building</CardTitle>
+              <CardTitle className="text-2xl md:text-3xl font-bold">Start Your Setup</CardTitle>
               <CardDescription>
-                No writing. No guesswork. Just answer questions about your coaching.
+                Three guided conversations. Under an hour. Fully ready for business.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -131,7 +151,7 @@ export function LandingPage({
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <Button type="submit" size="lg" className="w-full text-black font-bold bg-[#eccd8a] hover:bg-[#d4a854] rounded-full transition-colors">
-                  Start Building
+                  Start Now — Free
                 </Button>
               </form>
               <div className="mt-4 text-center">
@@ -144,8 +164,29 @@ export function LandingPage({
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          In less than 30 mins you'll have your complete mini funnel strategy and copy
+          In under an hour, you'll go from "I need to get organized" to "I'm fully ready for business."
         </p>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-12 px-4" style={{ backgroundColor: '#4a453c' }}>
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8">
+            How It Works
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {phases.map((phase, index) => (
+              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#eccd8a' }}>
+                  <span className="text-black font-bold">{index + 1}</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">{phase.title}</h3>
+                <p className="text-sm text-white/70 mb-3">{phase.time}</p>
+                <p className="text-white/90 text-sm leading-relaxed">{phase.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </main>;
 }
