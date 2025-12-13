@@ -340,73 +340,86 @@ const Setup = () => {
               <Card
                 key={item.id}
                 className={cn(
-                  'p-4 transition-all duration-200 cursor-pointer hover:shadow-md bg-white',
-                  isComplete && 'border-l-4 border-l-[#1fb14c]'
+                  'transition-all duration-200 cursor-pointer hover:shadow-md bg-white overflow-hidden',
+                  isComplete && 'border border-[#1fb14c]/30'
                 )}
                 onClick={() => !isComplete && setActiveItem(item.id)}
               >
-                <div className="flex items-center gap-4">
-                  {/* Status Icon */}
-                  <div className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
-                    isComplete ? 'bg-[#1fb14c]' : 'bg-muted'
-                  )}>
-                    {isComplete ? (
-                      <Check className="w-5 h-5 text-white" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-muted-foreground" />
-                    )}
+                {/* Green header bar for completed items */}
+                {isComplete && (
+                  <div className="bg-[#1fb14c] px-4 py-2 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-white" />
+                    <span className="text-sm font-medium text-white">Completed</span>
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-foreground">{item.title}</h3>
-                      <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
-                        {item.time}
-                      </span>
-                    </div>
-                    {isComplete ? (
-                      <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
-                    ) : (
-                      <p className="text-sm text-[#827666] font-medium mt-0.5">
-                        {SETUP_ITEM_MOTIVATION[item.id as keyof typeof SETUP_ITEM_MOTIVATION]?.cardStat}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Action Button */}
-                  <Button
-                    variant={isComplete ? 'outline' : 'default'}
-                    size="sm"
-                    className={cn(
-                      isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isComplete) {
-                        handleItemUncomplete(item.id);
-                      } else {
-                        setActiveItem(item.id);
-                      }
-                    }}
-                  >
-                    {isComplete ? 'Undo' : 'Start'}
-                  </Button>
-                </div>
-
-                {/* Skip option */}
-                {!isComplete && (
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground mt-2 ml-14"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Just close, doesn't mark complete
-                    }}
-                  >
-                    I'll do this later
-                  </button>
                 )}
+                
+                <div className={cn("p-4", !isComplete && "pt-4")}>
+                  <div className="flex items-center gap-4">
+                    {/* Status Icon */}
+                    <div className={cn(
+                      'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                      isComplete ? 'bg-[#1fb14c]/10' : 'bg-muted'
+                    )}>
+                      {isComplete ? (
+                        <Check className="w-5 h-5 text-[#1fb14c]" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className={cn(
+                          "font-semibold",
+                          isComplete ? "text-[#1fb14c]" : "text-foreground"
+                        )}>{item.title}</h3>
+                        <span className="text-xs px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
+                          {item.time}
+                        </span>
+                      </div>
+                      {isComplete ? (
+                        <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
+                      ) : (
+                        <p className="text-sm text-[#827666] font-medium mt-0.5">
+                          {SETUP_ITEM_MOTIVATION[item.id as keyof typeof SETUP_ITEM_MOTIVATION]?.cardStat}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Button */}
+                    <Button
+                      variant={isComplete ? 'outline' : 'default'}
+                      size="sm"
+                      className={cn(
+                        isComplete && 'text-[#1fb14c] border-[#1fb14c]/30'
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isComplete) {
+                          handleItemUncomplete(item.id);
+                        } else {
+                          setActiveItem(item.id);
+                        }
+                      }}
+                    >
+                      {isComplete ? 'Undo' : 'Start'}
+                    </Button>
+                  </div>
+
+                  {/* Skip option */}
+                  {!isComplete && (
+                    <button
+                      className="text-xs text-muted-foreground hover:text-foreground mt-2 ml-14"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Just close, doesn't mark complete
+                      }}
+                    >
+                      I'll do this later
+                    </button>
+                  )}
+                </div>
               </Card>
             );
           })}
