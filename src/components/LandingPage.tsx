@@ -150,7 +150,7 @@ export function LandingPage({
                   <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className={errors.email ? 'border-destructive' : ''} />
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
-                <Button type="submit" size="lg" className="w-full text-black font-bold bg-[#eccd8a] hover:bg-[#d4a854] rounded-full transition-colors">
+                <Button type="submit" size="lg" className="w-full text-black font-bold bg-[#ebcc89] hover:bg-[#d4b876] rounded-full transition-colors">
                   Start Now — Free
                 </Button>
               </form>
@@ -177,7 +177,7 @@ export function LandingPage({
           <div className="grid md:grid-cols-3 gap-6">
             {phases.map((phase, index) => (
               <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#eccd8a' }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#ebcc89' }}>
                   <span className="text-black font-bold">{index + 1}</span>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-1">{phase.title}</h3>
