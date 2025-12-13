@@ -176,6 +176,36 @@ const Setup = () => {
     }
   };
 
+  const handleItemUncomplete = async (itemId: string) => {
+    if (!user?.email) return;
+
+    const newProgress = { ...progress, [itemId]: false };
+    setProgress(newProgress as SetupProgress);
+
+    // Update database
+    const newCompletedCount = [
+      newProgress.profile_complete,
+      newProgress.calendar_connected,
+      newProgress.booking_page_created,
+      newProgress.contract_prepared,
+      newProgress.payments_connected,
+    ].filter(Boolean).length;
+
+    await supabase
+      .from('user_progress')
+      .update({
+        [itemId]: false,
+        phase1_progress: newCompletedCount,
+        phase1_complete: false,
+      })
+      .eq('user_email', user.email);
+
+    toast({
+      title: "Step unmarked",
+      description: `${setupItems.find(i => i.id === itemId)?.title} marked as incomplete.`,
+    });
+  };
+
   const handleSaveLocationId = async (locationId: string) => {
     if (!user?.email) return;
 
@@ -334,10 +364,14 @@ const Setup = () => {
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setActiveItem(item.id);
+                      if (isComplete) {
+                        handleItemUncomplete(item.id);
+                      } else {
+                        setActiveItem(item.id);
+                      }
                     }}
                   >
-                    {isComplete ? 'Done ✓' : 'Start'}
+                    {isComplete ? 'Undo' : 'Start'}
                   </Button>
                 </div>
 
