@@ -12,6 +12,7 @@ import {
   type UserProgress,
 } from '@/lib/user-progress';
 import { supabase } from '@/integrations/supabase/client';
+import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -108,12 +109,12 @@ const Dashboard = () => {
   const phase3Button = hasFunnels ? 'View Funnels' : 'Build Your First Funnel';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#605547' }}>
       {/* Navigation */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-10" style={{ backgroundColor: 'rgba(96, 85, 71, 0.9)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="font-semibold text-lg text-foreground">AwakenOS</div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+          <img src={awakenLogo} alt="AwakenOS" className="h-8 md:h-10" />
+          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-white hover:bg-white/10">
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
@@ -171,7 +172,7 @@ const Dashboard = () => {
 
           {/* Encouragement Footer */}
           <div className="text-center py-8">
-            <p className="text-muted-foreground text-lg">
+            <p className="text-white/70 text-lg">
               Take your time — this is a journey, not a race. ✨
             </p>
           </div>
