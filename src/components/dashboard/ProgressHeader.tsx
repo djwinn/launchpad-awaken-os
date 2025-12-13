@@ -13,15 +13,15 @@ export function ProgressHeader({ firstName, percentage, message }: ProgressHeade
   return (
     <div className="space-y-6">
       <div className="text-center md:text-left">
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
           Welcome back, {firstName}!
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-white/70 text-lg">
           Here's your progress toward being fully ready for business.
         </p>
       </div>
 
-      <div className="bg-card rounded-xl p-6 border border-border/50 shadow-sm">
+      <div className="bg-white rounded-xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <span className="text-lg font-semibold text-foreground">
             {percentage}% Complete
