@@ -36,8 +36,8 @@ export function PhaseCard({
   return (
     <Card
       className={cn(
-        'relative overflow-hidden transition-all duration-300 hover:shadow-lg',
-        isComplete && 'ring-2 ring-[#1fb14c]/30 bg-[#1fb14c]/5'
+        'relative overflow-hidden transition-all duration-300 hover:shadow-lg bg-white',
+        isComplete && 'border border-[#1fb14c]/40'
       )}
     >
       {isComplete && (
