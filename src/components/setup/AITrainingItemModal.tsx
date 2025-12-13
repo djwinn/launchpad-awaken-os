@@ -14,6 +14,8 @@ import {
 import { Brain, Zap, Bell, ExternalLink, Play, ChevronDown, Check, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AITrainingItemModalProps {
   itemId: string | null;
@@ -122,8 +124,25 @@ export const AITrainingItemModal = ({
   onComplete,
 }: AITrainingItemModalProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [instructionsOpen, setInstructionsOpen] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [locationId, setLocationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLocationId = async () => {
+      if (!user?.email) return;
+      const { data } = await supabase
+        .from('user_progress')
+        .select('location_id')
+        .eq('user_email', user.email)
+        .maybeSingle();
+      if (data?.location_id) {
+        setLocationId(data.location_id);
+      }
+    };
+    fetchLocationId();
+  }, [user?.email]);
 
   const config = itemId ? itemConfigs[itemId] : null;
   if (!config) return null;
@@ -141,7 +160,10 @@ export const AITrainingItemModal = ({
   };
 
   const handleOpenAwaken = () => {
-    window.open(AWAKEN_HOME, '_blank');
+    const url = locationId 
+      ? `${AWAKEN_BASE_URL}/${locationId}${config.awakenPath}`
+      : AWAKEN_HOME;
+    window.open(url, '_blank');
   };
 
   return (
