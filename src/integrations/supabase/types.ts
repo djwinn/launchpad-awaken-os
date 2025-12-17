@@ -60,6 +60,9 @@ export type Database = {
           calendar_connected: boolean
           contract_prepared: boolean
           created_at: string
+          funnel_blueprint: string | null
+          funnel_build_complete: boolean | null
+          funnel_craft_complete: boolean | null
           funnels_created: number
           id: string
           knowledge_base_content: string | null
@@ -86,6 +89,9 @@ export type Database = {
           calendar_connected?: boolean
           contract_prepared?: boolean
           created_at?: string
+          funnel_blueprint?: string | null
+          funnel_build_complete?: boolean | null
+          funnel_craft_complete?: boolean | null
           funnels_created?: number
           id?: string
           knowledge_base_content?: string | null
@@ -112,6 +118,9 @@ export type Database = {
           calendar_connected?: boolean
           contract_prepared?: boolean
           created_at?: string
+          funnel_blueprint?: string | null
+          funnel_build_complete?: boolean | null
+          funnel_craft_complete?: boolean | null
           funnels_created?: number
           id?: string
           knowledge_base_content?: string | null
