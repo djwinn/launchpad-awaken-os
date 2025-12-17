@@ -60,11 +60,6 @@ export const PHASE1_CELEBRATION = {
 
 // Phase 2 Social Capture Items - Card-visible stats
 export const SOCIAL_CAPTURE_MOTIVATION = {
-  social_message_complete: {
-    cardStat: "Personalized DMs convert 40% better than generic ones.",
-    before: "Your message will feel personal because it's based on your actual coaching transformation.",
-    after: "Your social capture toolkit is ready to use.",
-  },
   social_accounts_connected: {
     cardStat: "Connected accounts enable instant automation.",
     before: "Once connected, your Instagram and Facebook can work together automatically.",
@@ -81,8 +76,8 @@ export const PHASE2_CELEBRATION = {
   headline: "Your Social Capture is Live!",
   stats: [
     "Automatic DM to anyone who comments your keyword",
-    "Comment replies that drive engagement",
-    "Booking link delivered instantly — 24/7",
+    "Direct link to your booking page",
+    "Works on both Instagram and Facebook",
   ],
   quote: "Every comment on your posts is now a potential booked call.",
   transformation: "You've gone from 'I hope people see my posts' to 'every engaged follower gets captured automatically.'",

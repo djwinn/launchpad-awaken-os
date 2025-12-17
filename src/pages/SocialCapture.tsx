@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, MessageSquare, Link2, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Link2, Zap, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -19,7 +19,6 @@ import { getRandomCompletionMessage } from '@/lib/motivational-content';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 interface SocialCaptureProgress {
-  social_message_complete: boolean;
   social_accounts_connected: boolean;
   social_capture_active: boolean;
   phase1_complete: boolean;
@@ -27,20 +26,10 @@ interface SocialCaptureProgress {
 
 const socialCaptureItems = [
   {
-    id: 'social_message_complete',
-    title: 'Craft Your Message',
-    subtitle: 'Generate your social capture templates',
-    helperText: 'Answer questions to create your DM message, comment replies, and post CTAs.',
-    completedText: 'Message templates created ✓',
-    time: '~15 min',
-    icon: MessageSquare,
-    requiresPrevious: null,
-  },
-  {
     id: 'social_accounts_connected',
     title: 'Connect Your Social Accounts',
     subtitle: 'Link Instagram and Facebook',
-    helperText: 'Connect your social accounts to enable the automation.',
+    helperText: 'Connect your social accounts to enable the comment-to-DM automation.',
     completedText: 'Accounts connected ✓',
     time: '~5 min',
     icon: Link2,
@@ -52,10 +41,9 @@ const socialCaptureItems = [
     subtitle: 'Set up comment-to-DM automation',
     helperText: 'Configure the workflow that DMs people who comment on your posts.',
     completedText: 'Social capture active ✓',
-    time: '~10 min',
+    time: '~15 min',
     icon: Zap,
-    requiresPrevious: 'social_message_complete',
-    lockedText: 'Complete "Craft Your Message" first',
+    requiresPrevious: null,
   },
 ] as const;
 
@@ -65,7 +53,6 @@ const SocialCapture = () => {
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
   const [progress, setProgress] = useState<SocialCaptureProgress>({
-    social_message_complete: false,
     social_accounts_connected: false,
     social_capture_active: false,
     phase1_complete: false,
@@ -86,7 +73,6 @@ const SocialCapture = () => {
       if (!error && data) {
         const d = data as any;
         setProgress({
-          social_message_complete: d.social_message_complete ?? false,
           social_accounts_connected: d.social_accounts_connected ?? false,
           social_capture_active: d.social_capture_active ?? false,
           phase1_complete: d.phase1_complete ?? false,
@@ -99,13 +85,12 @@ const SocialCapture = () => {
   }, [user, loading]);
 
   const completedCount = [
-    progress.social_message_complete,
     progress.social_accounts_connected,
     progress.social_capture_active,
   ].filter(Boolean).length;
   
-  const progressPercentage = Math.round((completedCount / 3) * 100);
-  const allComplete = completedCount === 3;
+  const progressPercentage = Math.round((completedCount / 2) * 100);
+  const allComplete = completedCount === 2;
 
   const isItemLocked = (item: typeof socialCaptureItems[number]) => {
     if (!item.requiresPrevious) return false;
@@ -119,11 +104,10 @@ const SocialCapture = () => {
     setProgress(newProgress as SocialCaptureProgress);
 
     const newCompletedCount = [
-      newProgress.social_message_complete,
       newProgress.social_accounts_connected,
       newProgress.social_capture_active,
     ].filter(Boolean).length;
-    const phase2Complete = newCompletedCount === 3;
+    const phase2Complete = newCompletedCount === 2;
 
     await supabase
       .from('user_progress')
@@ -149,8 +133,7 @@ const SocialCapture = () => {
 
   const getProgressMessage = () => {
     if (completedCount === 0) return "Let's set up your lead capture system";
-    if (completedCount === 1) return "Great start — keep going";
-    if (completedCount === 2) return "Almost there — one more step";
+    if (completedCount === 1) return "Great start — one more step to go";
     return "Your social capture is live!";
   };
 
@@ -167,9 +150,7 @@ const SocialCapture = () => {
     const status = getItemStatus(item);
     if (status === 'locked') return;
     
-    if (item.id === 'social_message_complete') {
-      navigate('/social-capture/builder');
-    } else if (item.id === 'social_accounts_connected') {
+    if (item.id === 'social_accounts_connected') {
       navigate('/social-capture/connect');
     } else if (item.id === 'social_capture_active') {
       navigate('/social-capture/activate');
@@ -304,7 +285,7 @@ const SocialCapture = () => {
                       {isComplete ? (
                         <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
                       ) : isLocked && 'lockedText' in item ? (
-                        <p className="text-sm text-muted-foreground mt-0.5">{item.lockedText}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{(item as any).lockedText}</p>
                       ) : (
                         <p className="text-sm text-muted-foreground mt-0.5">{item.helperText}</p>
                       )}
@@ -316,7 +297,8 @@ const SocialCapture = () => {
                         variant={isComplete ? 'outline' : 'default'}
                         size="sm"
                         className={cn(
-                          isComplete && 'text-[#56bc77] border-[#56bc77]/30'
+                          isComplete && 'text-[#56bc77] border-[#56bc77]/30',
+                          !isComplete && 'bg-[#ebcc89] text-black hover:bg-[#d4b876]'
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -348,8 +330,8 @@ const SocialCapture = () => {
             <p className="text-sm font-medium text-foreground">Here's what you just set up:</p>
             {[
               'Automatic DM to anyone who comments your keyword',
-              'Comment replies that drive engagement',
-              'Booking link delivered instantly',
+              'Direct link to your booking page',
+              'Works on both Instagram and Facebook',
             ].map((stat, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#56bc77] flex items-center justify-center">
@@ -375,9 +357,9 @@ const SocialCapture = () => {
             </Button>
             <Button className="flex-1 bg-[#ebcc89] text-black hover:bg-[#d4b876]" onClick={() => {
               setShowCelebration(false);
-              navigate('/funnel-builder');
+              navigate('/funnel');
             }}>
-              Build Your First Funnel
+              Build Your Funnel
             </Button>
           </div>
         </DialogContent>

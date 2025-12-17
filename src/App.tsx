@@ -8,7 +8,6 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import SocialCapture from "./pages/SocialCapture";
-import SocialCaptureBuilder from "./pages/SocialCaptureBuilder";
 import SocialCaptureConnect from "./pages/SocialCaptureConnect";
 import SocialCaptureActivate from "./pages/SocialCaptureActivate";
 import Funnel from "./pages/Funnel";
@@ -31,8 +30,8 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/social-capture" element={<SocialCapture />} />
-          <Route path="/social-capture/builder" element={<SocialCaptureBuilder />} />
           <Route path="/social-capture/connect" element={<SocialCaptureConnect />} />
+          <Route path="/social-capture/activate" element={<SocialCaptureActivate />} />
           <Route path="/social-capture/activate" element={<SocialCaptureActivate />} />
           <Route path="/funnel" element={<Funnel />} />
           <Route path="/funnel/craft" element={<FunnelCraft />} />

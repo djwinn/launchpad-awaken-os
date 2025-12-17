@@ -91,11 +91,14 @@ const Dashboard = () => {
     : 'not-started';
 
   const phase2InProgress = Boolean(
-    (progress as any)?.social_message_complete || 
     (progress as any)?.social_accounts_connected || 
     (progress as any)?.social_capture_active
   );
-  const phase2Status: 'not-started' | 'in-progress' | 'complete' = progress?.phase2_complete
+  const phase2Complete = Boolean(
+    (progress as any)?.social_accounts_connected && 
+    (progress as any)?.social_capture_active
+  );
+  const phase2Status: 'not-started' | 'in-progress' | 'complete' = phase2Complete
     ? 'complete'
     : phase2InProgress
     ? 'in-progress'
@@ -165,7 +168,7 @@ const Dashboard = () => {
               title="Get Leads While You Sleep"
               subtitle="Turn comments into booked calls"
               description="Set up comment-to-DM automation — when someone comments on your posts, they automatically get a message with your booking link."
-              timeEstimate="~30 minutes"
+              timeEstimate="~20 minutes"
               status={phase2Status}
               buttonLabel={phase2Button}
               onClick={() => navigate('/social-capture')}
