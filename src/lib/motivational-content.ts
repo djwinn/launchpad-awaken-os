@@ -14,8 +14,8 @@ export const PHASE_INTRO_STATS = {
     message: "A professional setup builds trust before you say a word.",
   },
   phase2: {
-    stat: "78% of clients choose the first business that responds.",
-    message: "Most coaches take 24+ hours to reply. Your AI responds in seconds.",
+    stat: "Comment-to-DM automation converts 3x better than cold outreach.",
+    message: "When someone comments, they're already interested. Capture them instantly.",
   },
   phase3: {
     stat: "Coaches with a lead magnet generate 3x more discovery calls than those relying on social media alone.",
@@ -58,41 +58,34 @@ export const PHASE1_CELEBRATION = {
   quote: "Professionalism isn't about being corporate. It's about making it easy for people to trust you.",
 } as const;
 
-// Phase 2 AI Training Items - Card-visible stats
-export const AI_TRAINING_MOTIVATION = {
-  ai_foundation_complete: {
-    cardStat: "The average business takes 42 hours to respond. Yours will respond in seconds.",
-    before: "The average business takes 42 hours to respond to an inquiry. By then, your potential client has moved on.",
-    midConversation: "You're doing great. The more detail you share, the more your AI will sound like you — not a robot.",
-    after: "Your AI now knows your business as well as you do.",
+// Phase 2 Social Capture Items - Card-visible stats
+export const SOCIAL_CAPTURE_MOTIVATION = {
+  social_message_complete: {
+    cardStat: "Personalized DMs convert 40% better than generic ones.",
+    before: "Your message will feel personal because it's based on your actual coaching transformation.",
+    after: "Your social capture toolkit is ready to use.",
   },
-  ai_responder_active: {
-    cardStat: "Responding in 5 minutes makes you 21x more likely to convert a lead.",
-    stat: "Responding within 5 minutes makes you 21x more likely to convert a lead.",
-    before: "Your AI responds instantly. That's your new competitive advantage.",
-    context: "While other coaches are sleeping, on calls, or at dinner — your AI is answering questions and booking calls.",
-    after: "Your AI assistant is live. You're now responding 24/7.",
-    celebration: "You just solved the #1 conversion killer for coaches: slow response time.",
+  social_accounts_connected: {
+    cardStat: "Connected accounts enable instant automation.",
+    before: "Once connected, your Instagram and Facebook can work together automatically.",
+    after: "Social accounts connected and ready for automation.",
   },
-  reminders_configured: {
-    cardStat: "SMS reminders reduce no-shows by 38%.",
-    stat: "SMS reminders reduce no-shows by 38%.",
-    before: "That's roughly 1 in 3 missed calls you'll now save.",
-    context: "No-shows cost you time, energy, and momentum. A simple reminder protects all three.",
-    research: "Studies show reminder systems reduce no-show rates from 23% to as low as 8% — a 65% improvement.",
-    after: "Your bookings are now protected. Fewer no-shows, more clients.",
+  social_capture_active: {
+    cardStat: "Automated DMs respond instantly — even while you sleep.",
+    before: "Every comment becomes a potential booked call, captured automatically.",
+    after: "Your social capture is live! Comments now trigger automatic DMs.",
   },
 } as const;
 
 export const PHASE2_CELEBRATION = {
-  headline: "Your Conversion Protection is Complete",
+  headline: "Your Social Capture is Live!",
   stats: [
-    "Instant response (21x better conversion than waiting 30 min)",
-    "24/7 availability (while 90% of coaches are offline)",
-    "No-show protection (38% fewer missed calls)",
+    "Automatic DM to anyone who comments your keyword",
+    "Comment replies that drive engagement",
+    "Booking link delivered instantly — 24/7",
   ],
-  quote: "You're no longer competing on how fast you can reply. The system handles it.",
-  transformation: "You've gone from 'I hope I don't miss anything' to 'the system has my back.'",
+  quote: "Every comment on your posts is now a potential booked call.",
+  transformation: "You've gone from 'I hope people see my posts' to 'every engaged follower gets captured automatically.'",
 } as const;
 
 // Phase 3 Funnel Builder

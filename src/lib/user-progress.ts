@@ -6,9 +6,9 @@ export interface UserProgress {
   phase1_progress: number;
   phase1_complete: boolean;
   phase2_complete: boolean;
-  ai_foundation_complete: boolean;
-  ai_responder_active: boolean;
-  reminders_configured: boolean;
+  social_message_complete: boolean;
+  social_accounts_connected: boolean;
+  social_capture_active: boolean;
   funnels_created: number;
   created_at: string;
   updated_at: string;

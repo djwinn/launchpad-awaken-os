@@ -91,9 +91,9 @@ const Dashboard = () => {
     : 'not-started';
 
   const phase2InProgress = Boolean(
-    (progress as any)?.ai_foundation_complete || 
-    (progress as any)?.ai_responder_active || 
-    (progress as any)?.reminders_configured
+    (progress as any)?.social_message_complete || 
+    (progress as any)?.social_accounts_connected || 
+    (progress as any)?.social_capture_active
   );
   const phase2Status: 'not-started' | 'in-progress' | 'complete' = progress?.phase2_complete
     ? 'complete'
@@ -105,7 +105,7 @@ const Dashboard = () => {
 
   // Determine button labels
   const phase1Button = phase1Status === 'complete' ? 'Review' : phase1Status === 'in-progress' ? 'Continue' : 'Get Ready';
-  const phase2Button = phase2Status === 'complete' ? 'Review' : 'Set Up Your Assistant';
+  const phase2Button = phase2Status === 'complete' ? 'Review' : 'Get Leads';
   const phase3Button = hasFunnels ? 'View Funnels' : 'Build Your First Funnel';
 
   return (
@@ -147,13 +147,13 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={MessageSquareMore}
-              title="Your 24/7 Assistant"
-              subtitle="Answer inquiries while you sleep"
-              description="Train an AI that sounds like you — it handles questions, explains your services, and books discovery calls while you're with clients or offline."
-              timeEstimate="~20 minutes"
+              title="Get Leads While You Sleep"
+              subtitle="Turn comments into booked calls"
+              description="Set up comment-to-DM automation — when someone comments on your posts, they automatically get a message with your booking link."
+              timeEstimate="~30 minutes"
               status={phase2Status}
               buttonLabel={phase2Button}
-              onClick={() => navigate('/ai-training')}
+              onClick={() => navigate('/social-capture')}
             />
 
             <PhaseCard

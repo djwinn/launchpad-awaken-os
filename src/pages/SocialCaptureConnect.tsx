@@ -35,14 +35,15 @@ const SocialCaptureConnect = () => {
     const loadData = async () => {
       const { data } = await supabase
         .from('user_progress')
-        .select('location_id, social_accounts_connected')
+        .select('*')
         .eq('user_email', user.email)
         .maybeSingle();
 
       if (data) {
-        setLocationId(data.location_id);
-        setIsComplete((data as any).social_accounts_connected ?? false);
-        if ((data as any).social_accounts_connected) {
+        const d = data as any;
+        setLocationId(d.location_id);
+        setIsComplete(d.social_accounts_connected ?? false);
+        if (d.social_accounts_connected) {
           setCheckedSteps(new Array(steps.length).fill(true));
         }
       }
@@ -64,10 +65,10 @@ const SocialCaptureConnect = () => {
   const handleComplete = async () => {
     if (!user?.email || !allChecked) return;
 
-    await supabase
+    await (supabase
       .from('user_progress')
-      .update({ social_accounts_connected: true })
-      .eq('user_email', user.email);
+      .update({ social_accounts_connected: true } as any)
+      .eq('user_email', user.email));
 
     toast({ title: 'Social accounts connected!' });
     setIsComplete(true);

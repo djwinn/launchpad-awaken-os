@@ -487,9 +487,9 @@ const Setup = () => {
             </Button>
             <Button className="flex-1 bg-[#ebcc89] text-black hover:bg-[#d4b876]" onClick={() => {
               setShowCelebration(false);
-              navigate('/ai-training');
+              navigate('/social-capture');
             }}>
-              Set Up AI Assistant
+              Get Leads While You Sleep
             </Button>
           </div>
         </DialogContent>

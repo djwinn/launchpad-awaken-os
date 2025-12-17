@@ -70,6 +70,10 @@ export type Database = {
           phase2_complete: boolean
           profile_complete: boolean
           reminders_configured: boolean | null
+          social_accounts_connected: boolean | null
+          social_capture_active: boolean | null
+          social_capture_toolkit: string | null
+          social_message_complete: boolean | null
           updated_at: string
           user_email: string
         }
@@ -92,6 +96,10 @@ export type Database = {
           phase2_complete?: boolean
           profile_complete?: boolean
           reminders_configured?: boolean | null
+          social_accounts_connected?: boolean | null
+          social_capture_active?: boolean | null
+          social_capture_toolkit?: string | null
+          social_message_complete?: boolean | null
           updated_at?: string
           user_email: string
         }
@@ -114,6 +122,10 @@ export type Database = {
           phase2_complete?: boolean
           profile_complete?: boolean
           reminders_configured?: boolean | null
+          social_accounts_connected?: boolean | null
+          social_capture_active?: boolean | null
+          social_capture_toolkit?: string | null
+          social_message_complete?: boolean | null
           updated_at?: string
           user_email?: string
         }

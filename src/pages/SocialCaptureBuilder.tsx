@@ -195,13 +195,13 @@ NEXT STEPS
 
     // Save to database
     if (user?.email) {
-      await supabase
+      await (supabase
         .from('user_progress')
         .update({
           social_message_complete: true,
           social_capture_toolkit: outputDoc,
-        })
-        .eq('user_email', user.email);
+        } as any)
+        .eq('user_email', user.email));
     }
 
     setMessages(prev => [
