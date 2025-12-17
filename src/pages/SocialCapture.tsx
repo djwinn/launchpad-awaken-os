@@ -79,16 +79,17 @@ const SocialCapture = () => {
     const loadProgress = async () => {
       const { data, error } = await supabase
         .from('user_progress')
-        .select('social_message_complete, social_accounts_connected, social_capture_active, phase1_complete')
+        .select('*')
         .eq('user_email', user.email)
         .maybeSingle();
 
       if (!error && data) {
+        const d = data as any;
         setProgress({
-          social_message_complete: (data as any).social_message_complete ?? false,
-          social_accounts_connected: (data as any).social_accounts_connected ?? false,
-          social_capture_active: (data as any).social_capture_active ?? false,
-          phase1_complete: data.phase1_complete ?? false,
+          social_message_complete: d.social_message_complete ?? false,
+          social_accounts_connected: d.social_accounts_connected ?? false,
+          social_capture_active: d.social_capture_active ?? false,
+          phase1_complete: d.phase1_complete ?? false,
         });
       }
       setLoadingData(false);

@@ -42,15 +42,16 @@ const SocialCaptureActivate = () => {
     const loadData = async () => {
       const { data } = await supabase
         .from('user_progress')
-        .select('location_id, social_capture_active, social_capture_toolkit')
+        .select('*')
         .eq('user_email', user.email)
         .maybeSingle();
 
       if (data) {
-        setLocationId(data.location_id);
-        setToolkit((data as any).social_capture_toolkit);
-        setIsComplete((data as any).social_capture_active ?? false);
-        if ((data as any).social_capture_active) {
+        const d = data as any;
+        setLocationId(d.location_id);
+        setToolkit(d.social_capture_toolkit);
+        setIsComplete(d.social_capture_active ?? false);
+        if (d.social_capture_active) {
           setCheckedSteps(new Array(steps.length).fill(true));
         }
       }
@@ -72,13 +73,13 @@ const SocialCaptureActivate = () => {
   const handleComplete = async () => {
     if (!user?.email || !allChecked) return;
 
-    await supabase
+    await (supabase
       .from('user_progress')
       .update({ 
         social_capture_active: true,
         phase2_complete: true,
-      })
-      .eq('user_email', user.email);
+      } as any)
+      .eq('user_email', user.email));
 
     toast({ title: 'Social capture activated!' });
     setIsComplete(true);

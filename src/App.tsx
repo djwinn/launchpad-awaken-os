@@ -7,10 +7,10 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
-import AITraining from "./pages/AITraining";
-import AIFoundationBuilder from "./pages/AIFoundationBuilder";
-import AIResponderActivation from "./pages/AIResponderActivation";
-import AppointmentReminders from "./pages/AppointmentReminders";
+import SocialCapture from "./pages/SocialCapture";
+import SocialCaptureBuilder from "./pages/SocialCaptureBuilder";
+import SocialCaptureConnect from "./pages/SocialCaptureConnect";
+import SocialCaptureActivate from "./pages/SocialCaptureActivate";
 import OutputsHistory from "./pages/OutputsHistory";
 import NotFound from "./pages/NotFound";
 
@@ -27,10 +27,10 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/setup" element={<Setup />} />
-          <Route path="/ai-training" element={<AITraining />} />
-          <Route path="/ai-training/builder" element={<AIFoundationBuilder />} />
-          <Route path="/ai-training/activate" element={<AIResponderActivation />} />
-          <Route path="/ai-training/reminders" element={<AppointmentReminders />} />
+          <Route path="/social-capture" element={<SocialCapture />} />
+          <Route path="/social-capture/builder" element={<SocialCaptureBuilder />} />
+          <Route path="/social-capture/connect" element={<SocialCaptureConnect />} />
+          <Route path="/social-capture/activate" element={<SocialCaptureActivate />} />
           <Route path="/funnel-builder" element={<Index />} />
           <Route path="/outputs" element={<OutputsHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
