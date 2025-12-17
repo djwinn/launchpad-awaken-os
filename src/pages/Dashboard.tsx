@@ -101,12 +101,27 @@ const Dashboard = () => {
     ? 'in-progress'
     : 'not-started';
 
-  const hasFunnels = (progress?.funnels_created ?? 0) > 0;
+  // Phase 3 status based on new funnel columns
+  const phase3InProgress = Boolean(
+    (progress as any)?.funnel_craft_complete || 
+    (progress as any)?.funnel_build_complete
+  );
+  const phase3Complete = Boolean(
+    (progress as any)?.funnel_craft_complete && 
+    (progress as any)?.funnel_build_complete
+  );
+  const phase3Status: 'not-started' | 'in-progress' | 'complete' = phase3Complete
+    ? 'complete'
+    : phase3InProgress
+    ? 'in-progress'
+    : 'not-started';
+
+  const hasFunnels = (progress?.funnels_created ?? 0) > 0 || phase3Complete;
 
   // Determine button labels
   const phase1Button = phase1Status === 'complete' ? 'Review' : phase1Status === 'in-progress' ? 'Continue' : 'Get Ready';
   const phase2Button = phase2Status === 'complete' ? 'Review' : 'Get Leads';
-  const phase3Button = hasFunnels ? 'View Funnels' : 'Build Your First Funnel';
+  const phase3Button = phase3Complete ? 'Review' : phase3InProgress ? 'Continue' : 'Build Funnel';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#605547' }}>
@@ -158,15 +173,15 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={Magnet}
-              title="Client Magnet"
-              subtitle="Build funnels that attract and convert"
-              description="Build landing pages, lead magnets, and email sequences that bring the right people to you."
-              timeEstimate="20-30 minutes per funnel"
-              status={hasFunnels ? 'complete' : hasIncompleteChat ? 'in-progress' : 'not-started'}
-              buttonLabel={hasIncompleteChat ? "Continue Chat" : "Start New Funnel"}
-              onClick={() => navigate('/funnel-builder')}
-              secondaryButtonLabel={hasFunnels ? "View Previous" : undefined}
-              onSecondaryClick={hasFunnels ? () => navigate('/outputs') : undefined}
+              title="Build Your Funnel"
+              subtitle="Create your lead generation system"
+              description="Build a lead magnet, landing page, and email sequence that attracts and converts your ideal clients."
+              timeEstimate="2-3 hours total"
+              status={phase3Status}
+              buttonLabel={phase3Button}
+              onClick={() => navigate('/funnel')}
+              secondaryButtonLabel={phase3Complete ? "View Outputs" : undefined}
+              onSecondaryClick={phase3Complete ? () => navigate('/outputs') : undefined}
             />
           </div>
 

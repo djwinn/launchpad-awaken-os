@@ -88,7 +88,20 @@ export const PHASE2_CELEBRATION = {
   transformation: "You've gone from 'I hope people see my posts' to 'every engaged follower gets captured automatically.'",
 } as const;
 
-// Phase 3 Funnel Builder
+// Phase 3 Funnel Builder Items
+export const FUNNEL_MOTIVATION = {
+  funnel_craft_complete: {
+    cardStat: "A clear funnel blueprint cuts implementation time by 50%.",
+    before: "Answer questions about your business to generate your complete funnel content.",
+    after: "Your funnel blueprint is ready — lead magnet, landing page, emails, and social capture.",
+  },
+  funnel_build_complete: {
+    cardStat: "Lead magnets convert 2-5% of visitors into email subscribers.",
+    before: "Follow step-by-step video tutorials to build each piece of your funnel.",
+    after: "Your lead generation funnel is live and working!",
+  },
+} as const;
+
 export const FUNNEL_BUILDER_MOTIVATION = {
   afterIdealClient: "The clearer you are on who you help, the more your copy will resonate. You're doing the work most coaches skip.",
   afterTransformation: "This is the heart of your message. When someone reads this, they'll think 'that's exactly what I need.'",
@@ -96,14 +109,14 @@ export const FUNNEL_BUILDER_MOTIVATION = {
 } as const;
 
 export const PHASE3_CELEBRATION = {
-  headline: "Your Client Magnet is Ready",
+  headline: "Your Funnel is Complete!",
   items: [
-    "A lead magnet that builds your list while you sleep",
-    "A landing page that speaks directly to your ideal client",
-    "Emails that nurture cold leads into booked calls",
-    "Copy you can use across all your marketing",
+    "Lead magnet that builds your list while you sleep",
+    "Landing page that captures your ideal clients",
+    "Email sequence that nurtures leads to booked calls",
+    "Social capture workflow driving traffic to your funnel",
   ],
-  quote: "Most coaches spend months trying to figure out their messaging. You just did it in one conversation.",
+  quote: "Every piece is connected — from social posts to DMs to landing pages to emails. Your lead generation machine is ready.",
 } as const;
 
 // Micro-encouragements (rotate through these on item completion)
