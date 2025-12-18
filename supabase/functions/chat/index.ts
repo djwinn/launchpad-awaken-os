@@ -1,22 +1,47 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-import { validateLocationId, createUnauthorizedResponse } from "../_shared/validate-location.ts";
+import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-location-id',
 };
 
+// Prompt injection detection
+function detectPromptInjection(message: string): boolean {
+  const suspiciousPatterns = [
+    /ignore.{0,20}previous.{0,20}instructions/i,
+    /you are now/i,
+    /forget.{0,20}(everything|all|previous)/i,
+    /system.{0,20}prompt/i,
+    /reveal.{0,20}(instructions|prompt|system)/i,
+    /new.{0,20}instructions/i,
+    /disregard.{0,20}(above|previous)/i,
+  ];
+  
+  return suspiciousPatterns.some(pattern => pattern.test(message));
+}
+
+// Sanitize message content
+function sanitizeMessage(content: string): string {
+  // Remove excessive whitespace
+  let cleaned = content.replace(/\s+/g, ' ').trim();
+  // Remove null bytes
+  cleaned = cleaned.replace(/\0/g, '');
+  // Limit repeated characters
+  cleaned = cleaned.replace(/(.)\\1{20,}/g, '$1$1$1$1$1');
+  return cleaned;
+}
+
 // Input validation schemas
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
-  content: z.string().min(1, 'Message content cannot be empty').max(50000, 'Message content too long')
+  content: z.string().min(1).max(50000)
 });
 
 const ChatRequestSchema = z.object({
-  messages: z.array(MessageSchema).min(1, 'At least one message required').max(100, 'Too many messages'),
-  userName: z.string().max(100, 'Name too long').optional(),
-  systemPrompt: z.string().max(10000).optional(),
+  messages: z.array(MessageSchema).min(1).max(100),
+  userName: z.string().max(100).optional(),
   isSetupChat: z.boolean().optional()
 });
 
@@ -655,39 +680,57 @@ serve(async (req) => {
     // Validate location_id
     const { locationId, error: authError } = await validateLocationId(req);
     if (authError) {
-      console.error('Auth error:', authError);
       return createUnauthorizedResponse(authError, corsHeaders);
     }
 
-    console.log('Authenticated request from location:', locationId);
+    // Check rate limit
+    const rateLimit = checkRateLimit(locationId!, 'chat');
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
 
     const rawBody = await req.json();
     
     // Validate input
     const parseResult = ChatRequestSchema.safeParse(rawBody);
     if (!parseResult.success) {
-      console.error('Input validation failed:', parseResult.error.errors);
       return new Response(
-        JSON.stringify({ error: 'Invalid request format', details: parseResult.error.errors[0]?.message }),
+        JSON.stringify({ error: 'Invalid request format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    const { messages, userName, systemPrompt, isSetupChat } = parseResult.data;
+    const { messages, isSetupChat } = parseResult.data;
+    
+    // Check for prompt injection in user messages
+    for (const msg of messages) {
+      if (msg.role === 'user' && detectPromptInjection(msg.content)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid message content' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
+    // Sanitize messages
+    const sanitizedMessages = messages.map(msg => ({
+      ...msg,
+      content: sanitizeMessage(msg.content)
+    }));
+    
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     
     if (!ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY is not configured');
+      console.error('[CHAT] API key not configured');
       return new Response(
-        JSON.stringify({ error: 'API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Calling Claude API with', messages.length, 'messages', isSetupChat ? '(setup chat)' : '');
+    console.log('[CHAT] Processing request');
 
-    // Use custom system prompt for setup chat, otherwise use default
-    const activeSystemPrompt = isSetupChat && systemPrompt ? systemPrompt : SYSTEM_PROMPT;
+    // Use SYSTEM_PROMPT only - no user-controllable system prompts
     const maxTokens = isSetupChat ? 1024 : 16384;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -700,18 +743,17 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: maxTokens,
-        system: activeSystemPrompt,
-        messages: messages,
-        stream: !isSetupChat, // Don't stream for setup chat
+        system: SYSTEM_PROMPT,
+        messages: sanitizedMessages,
+        stream: !isSetupChat,
       }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Claude API error:', response.status, errorText);
+      console.error('[CHAT] API error:', response.status);
       return new Response(
-        JSON.stringify({ error: `API error: ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -735,9 +777,9 @@ serve(async (req) => {
       },
     });
   } catch (error) {
-    console.error('Chat function error:', error);
+    console.error('[CHAT] Error:', error instanceof Error ? error.message : 'Unknown');
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'An error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
