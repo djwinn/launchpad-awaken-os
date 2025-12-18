@@ -15,8 +15,8 @@ const emailSchema = z.string().trim().email({
   message: "Please enter a valid email address"
 });
 const benefits = [{
-  bold: "Receive clients",
-  rest: "Booking, contracts, payments. Done."
+  bold: "Receive Clients Professionally",
+  rest: "A clean booking flow, legally-binding contracts, and seamless payments. Polished, connected, and ready to go."
 }, {
   bold: "Get leads while you sleep",
   rest: "When people engage with your content, they automatically get your booking link. You wake up with calls on your calendar."
