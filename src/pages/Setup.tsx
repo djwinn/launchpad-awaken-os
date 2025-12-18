@@ -11,11 +11,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, Pencil, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
-import { LocationIdModal } from '@/components/setup/LocationIdModal';
 import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, SETUP_ITEM_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 import { getPhase1Data, updatePhase1Data, type Phase1Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
@@ -79,8 +78,6 @@ const Setup = () => {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [hasShownLocationPrompt, setHasShownLocationPrompt] = useState(false);
 
   useEffect(() => {
     if (!account?.location_id) return;
@@ -88,17 +85,11 @@ const Setup = () => {
     const loadProgress = async () => {
       const data = await getPhase1Data(account.location_id);
       setProgress(data);
-      
-      // Show location modal on first visit if no location_id in data
-      if (!data.location_id && !hasShownLocationPrompt) {
-        setShowLocationModal(true);
-        setHasShownLocationPrompt(true);
-      }
       setLoadingData(false);
     };
 
     loadProgress();
-  }, [account, hasShownLocationPrompt]);
+  }, [account]);
 
   const completedCount = [
     progress.profile_complete,
@@ -157,18 +148,6 @@ const Setup = () => {
     });
   };
 
-  const handleSaveLocationId = async (locationId: string) => {
-    if (!account?.location_id) return;
-
-    await updatePhase1Data(account.location_id, { location_id: locationId });
-    setProgress(prev => ({ ...prev, location_id: locationId }));
-    setShowLocationModal(false);
-    
-    toast({
-      title: 'Location ID saved!',
-      description: 'Links will now take you directly to the right pages in AwakenOS.',
-    });
-  };
 
   const getProgressMessage = () => {
     if (completedCount === 0) return "You've already set up your account!";
@@ -245,27 +224,6 @@ const Setup = () => {
           </div>
           <Progress value={progressPercentage} className="h-3 mb-2" />
           <p className="text-sm text-muted-foreground">{getProgressMessage()}</p>
-        </div>
-
-        {/* Location ID Section */}
-        <div className="mb-6 p-4 bg-white rounded-lg flex items-center justify-between">
-          <div>
-            <span className="text-sm font-medium text-foreground">AwakenOS Location ID: </span>
-            {progress.location_id ? (
-              <code className="text-sm font-mono text-muted-foreground">{progress.location_id.slice(0, 8)}...</code>
-            ) : (
-              <span className="text-sm text-muted-foreground">Not set</span>
-            )}
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowLocationModal(true)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <Pencil className="w-3 h-3 mr-1" />
-            {progress.location_id ? 'Edit' : 'Add'}
-          </Button>
         </div>
 
         {/* Checklist */}
@@ -372,13 +330,6 @@ const Setup = () => {
         locationId={progress.location_id}
       />
 
-      {/* Location ID Modal */}
-      <LocationIdModal
-        open={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocationId}
-        currentLocationId={progress.location_id || undefined}
-      />
 
       {/* Celebration Modal */}
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
