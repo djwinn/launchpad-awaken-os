@@ -60,9 +60,9 @@ const Phase2Domain = () => {
     navigate('/phase2');
   };
 
-  const getDeepLink = (path: string) => {
+  const getDeepLink = () => {
     if (account?.location_id) {
-      return `https://app.awaken.digital/v2/location/${account.location_id}${path}`;
+      return `https://app.awaken.digital/v2/location/${account.location_id}/settings/domain`;
     }
     return 'https://app.awaken.digital';
   };
@@ -157,7 +157,7 @@ const Phase2Domain = () => {
             {/* CTA Button */}
             <Button 
               className="bg-[#ebcc89] text-black hover:bg-[#d4b876]"
-              onClick={() => window.open(getDeepLink('/settings/domains'), '_blank')}
+              onClick={() => window.open(getDeepLink(), '_blank')}
             >
               Buy Domain
               <ExternalLink className="h-4 w-4 ml-2" />
@@ -210,7 +210,7 @@ const Phase2Domain = () => {
             {/* CTA Button */}
             <Button 
               className="bg-[#ebcc89] text-black hover:bg-[#d4b876]"
-              onClick={() => window.open(getDeepLink('/settings/domains'), '_blank')}
+              onClick={() => window.open(getDeepLink(), '_blank')}
             >
               Connect Domain
               <ExternalLink className="h-4 w-4 ml-2" />
