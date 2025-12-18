@@ -28,34 +28,64 @@ function generateRandomId(length: number = 8): string {
 }
 
 export async function getAccountByLocationId(locationId: string): Promise<Account | null> {
-  const { data, error } = await supabase
-    .from('accounts')
-    .select('*')
-    .eq('location_id', locationId)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase.functions.invoke('manage-accounts', {
+      method: 'GET',
+      body: null,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (error) {
+    // Use fetch directly since supabase.functions.invoke doesn't support query params well
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts?location_id=${encodeURIComponent(locationId)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Error fetching account by location_id:', response.statusText);
+      return null;
+    }
+
+    const result = await response.json();
+    return result.data as Account | null;
+  } catch (error) {
     console.error('Error fetching account by location_id:', error);
     return null;
   }
-
-  return data as Account | null;
 }
 
 export async function getAccountByEmail(email: string): Promise<Account | null> {
-  const { data, error } = await supabase
-    .from('accounts')
-    .select('*')
-    .eq('demo_email', email)
-    .eq('is_demo', true)
-    .maybeSingle();
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts?email=${encodeURIComponent(email)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-  if (error) {
+    if (!response.ok) {
+      console.error('Error fetching account by email:', response.statusText);
+      return null;
+    }
+
+    const result = await response.json();
+    return result.data as Account | null;
+  } catch (error) {
     console.error('Error fetching account by email:', error);
     return null;
   }
-
-  return data as Account | null;
 }
 
 export async function createAccount(locationId: string, isDemo: boolean = false): Promise<Account | null> {
@@ -63,22 +93,34 @@ export async function createAccount(locationId: string, isDemo: boolean = false)
     ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() 
     : null;
 
-  const { data, error } = await supabase
-    .from('accounts')
-    .insert({
-      location_id: locationId,
-      is_demo: isDemo,
-      expires_at: expiresAt,
-    })
-    .select()
-    .single();
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          location_id: locationId,
+          is_demo: isDemo,
+          expires_at: expiresAt,
+        }),
+      }
+    );
 
-  if (error) {
+    if (!response.ok) {
+      console.error('Error creating account:', response.statusText);
+      return null;
+    }
+
+    const result = await response.json();
+    return result.data as Account;
+  } catch (error) {
     console.error('Error creating account:', error);
     return null;
   }
-
-  return data as Account;
 }
 
 export async function createDemoAccount(
@@ -95,25 +137,37 @@ export async function createDemoAccount(
   const locationId = `demo_${generateRandomId()}`;
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data, error } = await supabase
-    .from('accounts')
-    .insert({
-      location_id: locationId,
-      is_demo: true,
-      expires_at: expiresAt,
-      demo_name: name,
-      demo_email: email,
-      demo_business: business || null,
-    })
-    .select()
-    .single();
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          location_id: locationId,
+          is_demo: true,
+          expires_at: expiresAt,
+          demo_name: name,
+          demo_email: email,
+          demo_business: business || null,
+        }),
+      }
+    );
 
-  if (error) {
+    if (!response.ok) {
+      console.error('Error creating demo account:', response.statusText);
+      return null;
+    }
+
+    const result = await response.json();
+    return result.data as Account;
+  } catch (error) {
     console.error('Error creating demo account:', error);
     return null;
   }
-
-  return data as Account;
 }
 
 export async function updateAccountPhase(
@@ -130,17 +184,30 @@ export async function updateAccountPhase(
     updates[`phase_${phase}_data`] = data;
   }
 
-  const { error } = await supabase
-    .from('accounts')
-    .update(updates)
-    .eq('location_id', locationId);
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+          'X-Location-ID': locationId,
+        },
+        body: JSON.stringify({ updates }),
+      }
+    );
 
-  if (error) {
+    if (!response.ok) {
+      console.error('Error updating account phase:', response.statusText);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
     console.error('Error updating account phase:', error);
     return false;
   }
-
-  return true;
 }
 
 export async function updateAccountPhaseData(
@@ -148,17 +215,32 @@ export async function updateAccountPhaseData(
   phase: 1 | 2 | 3,
   data: Record<string, unknown>
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from('accounts')
-    .update({ [`phase_${phase}_data`]: data })
-    .eq('location_id', locationId);
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-accounts`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Content-Type': 'application/json',
+          'X-Location-ID': locationId,
+        },
+        body: JSON.stringify({ 
+          updates: { [`phase_${phase}_data`]: data }
+        }),
+      }
+    );
 
-  if (error) {
+    if (!response.ok) {
+      console.error('Error updating account phase data:', response.statusText);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
     console.error('Error updating account phase data:', error);
     return false;
   }
-
-  return true;
 }
 
 export function isAccountExpired(account: Account): boolean {
