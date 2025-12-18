@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { validateLocationId, createUnauthorizedResponse } from "../_shared/validate-location.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-location-id',
 };
 
 serve(async (req) => {
@@ -11,6 +12,15 @@ serve(async (req) => {
   }
 
   try {
+    // Validate location_id
+    const { locationId, error: authError } = await validateLocationId(req);
+    if (authError) {
+      console.error('Auth error:', authError);
+      return createUnauthorizedResponse(authError, corsHeaders);
+    }
+
+    console.log('Authenticated document parse request from location:', locationId);
+
     const formData = await req.formData();
     const file = formData.get('file') as File;
 

@@ -1,28 +1,24 @@
-import { supabase } from '@/integrations/supabase/client';
-
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 interface StreamChatParams {
   messages: Array<{ role: string; content: string }>;
+  locationId: string;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError: (error: Error) => void;
 }
 
-export async function streamChat({ messages, onDelta, onDone, onError }: StreamChatParams) {
+export async function streamChat({ messages, locationId, onDelta, onDone, onError }: StreamChatParams) {
   try {
-    // Get the current session for authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.access_token) {
-      throw new Error('Not authenticated');
+    if (!locationId) {
+      throw new Error('Location ID required');
     }
 
     const response = await fetch(CHAT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}`,
+        'X-Location-ID': locationId,
       },
       body: JSON.stringify({
         messages: messages.map(m => ({ role: m.role, content: m.content })),

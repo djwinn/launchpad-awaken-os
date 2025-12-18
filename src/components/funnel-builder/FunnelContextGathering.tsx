@@ -5,9 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, ArrowRight, MessageSquare, CheckCircle2, Edit3, Home, Sparkles, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
+import { extractFunnelContext } from '@/lib/location-api';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAccount } from '@/contexts/AccountContext';
+import { getPhase2Data } from '@/lib/phase-data';
 import logo from '@/assets/logo.png';
 import botIcon from '@/assets/bot-icon.png';
 import { PHASE_INTRO_STATS } from '@/lib/motivational-content';
@@ -42,7 +44,6 @@ interface ConversationMessage {
 
 interface FunnelContextGatheringProps {
   userName: string;
-  userEmail: string;
   onContextComplete: (context: FunnelContext) => void;
 }
 
@@ -55,9 +56,10 @@ const CONVERSATION_QUESTIONS = [
   "What's your booking link for discovery calls? (optional — you can skip this)"
 ];
 
-export function FunnelContextGathering({ userName, userEmail, onContextComplete }: FunnelContextGatheringProps) {
+export function FunnelContextGathering({ userName, onContextComplete }: FunnelContextGatheringProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { account } = useAccount();
   
   const [step, setStep] = useState<'input' | 'extracting' | 'review' | 'conversation'>('input');
   const [pastedContent, setPastedContent] = useState('');
@@ -73,23 +75,22 @@ export function FunnelContextGathering({ userName, userEmail, onContextComplete 
   const [conversationAnswers, setConversationAnswers] = useState<string[]>([]);
   const [isProcessingConversation, setIsProcessingConversation] = useState(false);
 
+  const locationId = account?.location_id || '';
+
   // Check for Phase 2 data on mount
   useEffect(() => {
     const checkPhase2Data = async () => {
-      const { data } = await supabase
-        .from('user_progress')
-        .select('knowledge_base_content')
-        .eq('user_email', userEmail)
-        .maybeSingle();
-
-      if (data?.knowledge_base_content) {
+      if (!locationId) return;
+      
+      const phase2Data = await getPhase2Data(locationId);
+      if (phase2Data?.social_capture_toolkit) {
         setHasPhase2Data(true);
-        setPhase2Content(data.knowledge_base_content);
+        setPhase2Content(phase2Data.social_capture_toolkit);
       }
     };
 
     checkPhase2Data();
-  }, [userEmail]);
+  }, [locationId]);
 
   const handleUsePhase2Data = async () => {
     if (phase2Content) {
@@ -99,38 +100,20 @@ export function FunnelContextGathering({ userName, userEmail, onContextComplete 
   };
 
   const handleExtract = async (content: string, source: 'paste' | 'phase2' = 'paste') => {
-    if (!content.trim()) return;
+    if (!content.trim() || !locationId) return;
     
     setIsExtracting(true);
     setStep('extracting');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-funnel-context`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ content }),
-        }
-      );
-
-      const data = await response.json();
+      const data = await extractFunnelContext(locationId, content);
 
       if (data.error) {
         throw new Error(data.error);
       }
 
       // Check if extraction found meaningful content
-      const extracted = data.extracted || {};
+      const extracted = (data.extracted || {}) as ExtractedData;
       const hasContent = extracted.ideal_client || extracted.main_problem || extracted.transformation || extracted.coaching_type;
 
       if (!hasContent) {
@@ -458,8 +441,8 @@ export function FunnelContextGathering({ userName, userEmail, onContextComplete 
         <div className="flex items-center gap-3">
           <img src={logo} alt="Logo" className="h-8 w-auto" />
           <div>
-            <h1 className="font-medium text-foreground">Let's Build Your Funnel</h1>
-            <p className="text-xs text-muted-foreground">First, share some context about your business</p>
+            <h1 className="font-medium text-foreground">Mini-Funnel Builder</h1>
+            <p className="text-xs text-muted-foreground">Building with {userName}</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
@@ -470,92 +453,108 @@ export function FunnelContextGathering({ userName, userEmail, onContextComplete 
 
       <ScrollArea className="flex-1">
         <div className="max-w-2xl mx-auto py-8 px-4">
-          {/* Motivational Stat Banner */}
-          <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3 mb-6">
-            <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">{PHASE_INTRO_STATS.phase3.stat}</p>
-              <p className="text-sm text-muted-foreground">{PHASE_INTRO_STATS.phase3.message}</p>
+          {/* Motivational stat */}
+          <div className="mb-8 p-4 bg-muted/50 rounded-lg border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {PHASE_INTRO_STATS.phase3}
+              </p>
             </div>
           </div>
 
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-semibold mb-2">Let's Get Started</h2>
+            <p className="text-muted-foreground">
+              First, I need to learn about your business so I can write copy that sounds like you.
+            </p>
+          </div>
+
+          {/* Option 1: Paste content */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-2">Option 1: Paste Your Content</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Paste text from your website, bio, or any existing marketing materials. I'll extract the key information.
+              </p>
+              <Textarea
+                placeholder="Paste your website content, bio, or marketing copy here..."
+                className="min-h-[150px] mb-4"
+                value={pastedContent}
+                onChange={(e) => setPastedContent(e.target.value)}
+              />
+              <Button 
+                onClick={() => handleExtract(pastedContent)} 
+                disabled={!pastedContent.trim() || isExtracting || !locationId}
+                className="w-full"
+              >
+                {isExtracting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Extract Information
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Phase 2 data option */}
           {hasPhase2Data && (
             <Card className="mb-6 border-primary/20 bg-primary/5">
               <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground mb-2">
-                      I see you've already trained your AI assistant. Want me to use that info?
-                    </p>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleUsePhase2Data}>
-                        Yes, Use My AI Training
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setHasPhase2Data(false)}>
-                        No, I'll Paste Something Else
-                      </Button>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <h3 className="font-medium">Use Your AI Training Data</h3>
                 </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  I found the content from your Phase 2 AI training. Want to use that instead?
+                </p>
+                <Button 
+                  onClick={handleUsePhase2Data}
+                  variant="outline"
+                  className="w-full"
+                  disabled={!locationId}
+                >
+                  Use My Existing Data
+                </Button>
               </CardContent>
             </Card>
           )}
 
-          <div className="space-y-4 mb-6">
-            <p className="text-muted-foreground">
-              The more I know about your business, the better copy I can write for your funnel.
-            </p>
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">Paste any content you have:</p>
-              <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 ml-1">
-                <li>Your AI training output (from Phase 2)</li>
-                <li>Text from your website (About page, Services)</li>
-                <li>A bio or description of what you do</li>
-                <li>Notes about who you help and what you offer</li>
-              </ul>
-              <p className="text-sm text-muted-foreground italic">The more detail, the better.</p>
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
             </div>
           </div>
 
-          <Textarea
-            value={pastedContent}
-            onChange={(e) => setPastedContent(e.target.value)}
-            placeholder="Paste your content here..."
-            className="min-h-[200px] resize-none mb-4"
-          />
-
-          <p className="text-sm text-muted-foreground mb-4">
-            Don't have anything written? No problem.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={() => handleExtract(pastedContent)}
-              disabled={!pastedContent.trim() || isExtracting}
-              className="gap-2"
-            >
-              {isExtracting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Continue with This Content
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={startConversation}
-              className="gap-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              I'll Answer Some Questions Instead
-            </Button>
-          </div>
+          {/* Option 2: Answer questions */}
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-2">Option 2: Answer a Few Questions</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Don't have content to paste? No problem! I'll ask you 6 quick questions instead (~5 minutes).
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={startConversation}
+                className="w-full gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Start Questions
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
     </div>
