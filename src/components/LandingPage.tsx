@@ -18,30 +18,11 @@ const emailSchema = z.string().trim().email({
 });
 
 const benefits = [
-  { bold: "Ready to receive clients", rest: "Calendar, booking page, contracts, and payments — so when someone wants to work with you, you're ready." },
-  { bold: "AI that responds 24/7", rest: "Trained on your voice, your services, your style — answering questions and booking calls while you sleep." },
-  { bold: "Reminders that protect your bookings", rest: "Reduce no-shows by up to 50% with automatic SMS and email reminders." },
-  { bold: "A complete funnel to attract clients", rest: "Lead magnet, landing page, nurture emails, and offer — all written for you." },
-  { bold: "One connected system", rest: "No more juggling scattered tools. Everything works together." }
+  { bold: "Receive clients", rest: "Booking, contracts, payments. Done." },
+  { bold: "Get leads while you sleep", rest: "When people engage with your content, they automatically get your booking link. You wake up with calls on your calendar." },
+  { bold: "Convert leads into clients", rest: "With a complete funnel — your offer, lead magnet, landing page, and nurture emails — written for you." }
 ];
 
-const phases = [
-  { 
-    title: "Ready for Business", 
-    time: "~17 minutes",
-    description: "Book, sign, and get paid professionally. Calendar, booking page, contracts, and payments."
-  },
-  { 
-    title: "Your 24/7 Assistant", 
-    time: "~35 minutes",
-    description: "Train an AI that sounds like you. It handles inquiries and books calls while you sleep."
-  },
-  { 
-    title: "Client Magnet", 
-    time: "~30 minutes",
-    description: "Build landing pages, lead magnets, and emails that bring the right people to you."
-  }
-];
 export function LandingPage({
   onStartClick,
   className
@@ -89,16 +70,13 @@ export function LandingPage({
           </div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight text-white">
-            From Scattered to Systemized
+            The Setup You'll Actually Finish
           </h1>
-          <p className="text-3xl md:text-4xl lg:text-5xl tracking-tight leading-tight italic font-semibold -mt-2 text-white">
-            In One Afternoon
-          </p>
           
           <p style={{
           color: '#d4d4d4'
         }} className="text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-            A guided setup that gives you everything you need to receive inquiries, respond instantly, and convert them into paying clients — without the tech overwhelm.
+            Most platforms give you tools and hope you figure it out. This is different. A guided experience — built into AwakenOS — that walks you through everything step by step. No overwhelm. No guesswork. Just follow the process.
           </p>
         </div>
       </section>
@@ -116,7 +94,7 @@ export function LandingPage({
           {/* Benefits */}
           <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-              What You'll Walk Away With:
+              After a few hours, you'll be ready to:
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => <li key={index} className="flex items-start gap-3">
@@ -135,7 +113,7 @@ export function LandingPage({
             <CardHeader className="space-y-1 pb-4">
               <CardTitle className="text-2xl md:text-3xl font-bold">Start Your Setup</CardTitle>
               <CardDescription>
-                Three guided conversations. Under an hour. Fully ready for business.
+                Three guided conversations. A few hours. Fully ready for clients.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -151,7 +129,7 @@ export function LandingPage({
                   {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <Button type="submit" size="lg" className="w-full text-black font-bold bg-[#ebcc89] hover:bg-[#d4b876] rounded-full transition-colors">
-                  Start Now — Free
+                  Start the Guided Setup
                 </Button>
               </form>
               <div className="mt-4 text-center">
@@ -164,29 +142,9 @@ export function LandingPage({
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          In under an hour, you'll go from "I need to get organized" to "I'm fully ready for business."
+          No tutorials. No guesswork. Just follow the steps.
         </p>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-12 px-4" style={{ backgroundColor: '#4a453c' }}>
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8">
-            How It Works
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {phases.map((phase, index) => (
-              <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#ebcc89' }}>
-                  <span className="text-black font-bold">{index + 1}</span>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-1">{phase.title}</h3>
-                <p className="text-sm text-white/70 mb-3">{phase.time}</p>
-                <p className="text-white/90 text-sm leading-relaxed">{phase.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </main>;
 }
