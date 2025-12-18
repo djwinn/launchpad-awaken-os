@@ -94,7 +94,7 @@ export function LandingPage({
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
           <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
-            <h2 className="text-2xl font-bold text-muted-foreground md:text-xl">
+            <h2 className="text-2xl font-bold md:text-xl" style={{ color: '#605547' }}>
               After a few hours, you'll be ready to:
             </h2>
             <ul className="space-y-4">
