@@ -122,9 +122,9 @@ const Dashboard = () => {
   const hasFunnels = (progress?.funnels_created ?? 0) > 0 || phase3Complete;
 
   // Determine button labels
-  const phase1Button = phase1Status === 'complete' ? 'Review' : phase1Status === 'in-progress' ? 'Continue' : 'Get Ready';
+  const phase1Button = phase1Status === 'complete' ? 'Review' : phase1Status === 'in-progress' ? 'Continue' : 'Get Started';
   const phase2Button = phase2Status === 'complete' ? 'Review' : 'Get Leads';
-  const phase3Button = phase3Complete ? 'Review' : phase3InProgress ? 'Continue' : 'Build Funnel';
+  const phase3Button = phase3Complete ? 'Review' : phase3InProgress ? 'Continue' : 'Get Clients';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#605547' }}>
@@ -154,8 +154,8 @@ const Dashboard = () => {
             <PhaseCard
               icon={CheckCircle}
               title="Ready for Business"
-              subtitle="Book, sign, and get paid professionally"
-              description="Set up your calendar, booking page, contracts, and payments — so when someone wants to work with you, you're ready."
+              subtitle="Look and feel like a pro from day one"
+              description="When someone wants to work with you, you'll be ready — with a booking page, professional contracts, and payments all set up. No more scrambling."
               timeEstimate="~17 minutes"
               status={phase1Status}
               progress={{ current: progress?.phase1_progress ?? 0, total: 5 }}
@@ -166,8 +166,8 @@ const Dashboard = () => {
             <PhaseCard
               icon={MessageSquareMore}
               title="Get Leads While You Sleep"
-              subtitle="Turn comments into booked calls"
-              description="Set up comment-to-DM automation — when someone comments on your posts, they automatically get a message with your booking link."
+              subtitle="Turn social posts into booked calls"
+              description="Post on Instagram or Facebook, and when people engage, they automatically get a message from you with your booking link. You wake up with calls on your calendar."
               timeEstimate="~20 minutes"
               status={phase2Status}
               buttonLabel={phase2Button}
@@ -176,10 +176,10 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={Magnet}
-              title="Build Your Funnel"
-              subtitle="Create your lead generation system"
-              description="Build a lead magnet, landing page, and email sequence that attracts and converts your ideal clients."
-              timeEstimate="2-3 hours total"
+              title="Convert Leads Into Clients"
+              subtitle="Your complete client conversion system"
+              description="This is where it all comes together — your offer, your lead magnet, your landing page, and a nurture sequence that turns subscribers into clients."
+              timeEstimate="~2 hours"
               status={phase3Status}
               buttonLabel={phase3Button}
               onClick={() => navigate('/funnel')}
