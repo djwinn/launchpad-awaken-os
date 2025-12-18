@@ -153,7 +153,7 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <PhaseCard
               icon={CheckCircle}
-              title="Ready for Business"
+              title="Get Ready for Business"
               subtitle="Look and feel like a pro from day one"
               description="When someone wants to work with you, you'll be ready — with a booking page, professional contracts, and payments all set up. No more scrambling."
               timeEstimate="~17 minutes"
@@ -165,7 +165,7 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={MessageSquareMore}
-              title="Get Leads While You Sleep"
+              title="Capture Leads While You Sleep"
               subtitle="Turn social posts into booked calls"
               description="Post on Instagram or Facebook, and when people engage, they automatically get a message from you with your booking link. You wake up with calls on your calendar."
               timeEstimate="~20 minutes"

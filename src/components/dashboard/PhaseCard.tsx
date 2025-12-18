@@ -46,8 +46,8 @@ export function PhaseCard({
             <Icon className={cn('w-7 h-7', isComplete ? 'text-[#56bc77]' : 'text-[#827666]')} />
           </div>
           <div>
-            <CardTitle className="text-xl mb-1 font-bold">{title}</CardTitle>
-            <CardDescription className="text-base font-medium text-foreground/70">
+            <CardTitle className="text-xl mb-1 font-bold min-h-[56px] flex items-center justify-center">{title}</CardTitle>
+            <CardDescription className="text-base font-medium text-foreground/70 min-h-[48px] flex items-center justify-center">
               {subtitle}
             </CardDescription>
           </div>
@@ -55,7 +55,7 @@ export function PhaseCard({
       </CardHeader>
 
       <CardContent className="flex flex-col flex-1 text-center">
-        <p className="text-muted-foreground leading-relaxed flex-1">{description}</p>
+        <p className="text-muted-foreground leading-relaxed min-h-[96px]">{description}</p>
 
         <div className="mt-4 space-y-4">
           <div className="flex items-center justify-between text-sm">
