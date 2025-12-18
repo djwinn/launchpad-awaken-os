@@ -240,13 +240,13 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={MessageSquareMore}
-              title={<>Capture Leads<br />While You Sleep</>}
-              subtitle="Turn social posts into booked calls"
-              description="Post on Instagram or Facebook, and when people engage, they automatically get a message from you with your booking link. You wake up with calls on your calendar."
-              timeEstimate="~20 minutes"
+              title={<>Get Leads<br />While You Sleep</>}
+              subtitle="Turn comments into clients automatically"
+              description="Set up a simple system where people comment on your post, get a DM with your free resource, and join your email list — all on autopilot."
+              timeEstimate="~45 minutes"
               status={phase2Status}
               buttonLabel={phase2Button}
-              onClick={() => navigate('/social-capture')}
+              onClick={() => navigate('/phase2')}
             />
 
             <PhaseCard

@@ -83,9 +83,21 @@ export function FunnelContextGathering({ userName, onContextComplete }: FunnelCo
       if (!locationId) return;
       
       const phase2Data = await getPhase2Data(locationId);
-      if (phase2Data?.social_capture_toolkit) {
-        setHasPhase2Data(true);
-        setPhase2Content(phase2Data.social_capture_toolkit);
+      // Check if Phase 2 has content outputs we can use
+      if (phase2Data?.content_outputs) {
+        const outputs = phase2Data.content_outputs;
+        // Build a content string from Phase 2 outputs for extraction
+        const phase2Summary = [
+          outputs.coaching_type && `What I do: ${outputs.coaching_type}`,
+          outputs.ideal_client && `Who I help: ${outputs.ideal_client}`,
+          outputs.main_problem && `Main problem: ${outputs.main_problem}`,
+          outputs.lead_magnet && `Lead magnet: ${outputs.lead_magnet}`,
+        ].filter(Boolean).join('\n\n');
+        
+        if (phase2Summary) {
+          setHasPhase2Data(true);
+          setPhase2Content(phase2Summary);
+        }
       }
     };
 
