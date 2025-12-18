@@ -153,7 +153,7 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <PhaseCard
               icon={CheckCircle}
-              title="Get Ready for Business"
+              title={<>Get Ready<br />for Business</>}
               subtitle="Look and feel like a pro from day one"
               description="When someone wants to work with you, you'll be ready — with a booking page, professional contracts, and payments all set up. No more scrambling."
               timeEstimate="~17 minutes"
@@ -165,7 +165,7 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={MessageSquareMore}
-              title="Capture Leads While You Sleep"
+              title={<>Capture Leads<br />While You Sleep</>}
               subtitle="Turn social posts into booked calls"
               description="Post on Instagram or Facebook, and when people engage, they automatically get a message from you with your booking link. You wake up with calls on your calendar."
               timeEstimate="~20 minutes"
@@ -176,7 +176,7 @@ const Dashboard = () => {
 
             <PhaseCard
               icon={Magnet}
-              title="Convert Leads Into Clients"
+              title={<>Convert Leads<br />Into Clients</>}
               subtitle="Your complete client conversion system"
               description="This is where it all comes together — your offer, your lead magnet, your landing page, and a nurture sequence that turns subscribers into clients."
               timeEstimate="~2 hours"
