@@ -40,12 +40,12 @@ export function PhaseCard({
           </div>
         </div>}
 
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-4">
-          <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', isComplete ? 'bg-[#56bc77]/10' : 'bg-[#827666]/10')}>
-            <Icon className={cn('w-6 h-6', isComplete ? 'text-[#56bc77]' : 'text-[#827666]')} />
+      <CardHeader className="pb-3 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className={cn('w-14 h-14 rounded-xl flex items-center justify-center', isComplete ? 'bg-[#56bc77]/10' : 'bg-[#827666]/10')}>
+            <Icon className={cn('w-7 h-7', isComplete ? 'text-[#56bc77]' : 'text-[#827666]')} />
           </div>
-          <div className="flex-1 min-w-0 pr-8">
+          <div>
             <CardTitle className="text-xl mb-1 font-bold">{title}</CardTitle>
             <CardDescription className="text-base font-medium text-foreground/70">
               {subtitle}
@@ -54,7 +54,7 @@ export function PhaseCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col flex-1">
+      <CardContent className="flex flex-col flex-1 text-center">
         <p className="text-muted-foreground leading-relaxed flex-1">{description}</p>
 
         <div className="mt-4 space-y-4">
