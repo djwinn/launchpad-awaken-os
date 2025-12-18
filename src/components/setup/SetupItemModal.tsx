@@ -581,17 +581,14 @@ After generating, say: "Review it above and make any edits you need. When you're
             
             <Button 
               onClick={handleOpenAwaken}
-              className="w-full bg-[#827666] hover:bg-[#6b5a4a] mb-4"
+              className="w-full bg-[#827666] hover:bg-[#6b5a4a] mb-2"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              {locationId ? 'Open in AwakenOS →' : 'Open AwakenOS →'}
+              Complete in Platform
             </Button>
-            
-            {!locationId && (
-              <p className="text-xs text-muted-foreground mb-4 text-center">
-                Add your Location ID to go directly to the right page
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground mb-4 text-center">
+              Opens a new window. Close it when done to continue here.
+            </p>
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-3">

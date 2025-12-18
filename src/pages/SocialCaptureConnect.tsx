@@ -116,12 +116,15 @@ const SocialCaptureConnect = () => {
 
         {/* Open in AwakenOS Button */}
         <Button
-          className="w-full mb-6 bg-[#ebcc89] text-black hover:bg-[#d4b876]"
+          className="w-full mb-2 bg-[#ebcc89] text-black hover:bg-[#d4b876]"
           onClick={() => window.open(getAwakenLink(), '_blank')}
         >
-          Open in AwakenOS
+          Complete in Platform
           <ExternalLink className="h-4 w-4 ml-2" />
         </Button>
+        <p className="text-xs text-muted-foreground mb-6 text-center">
+          Opens a new window. Close it when done to continue here.
+        </p>
 
         {/* Steps Checklist */}
         <Card className="p-4 bg-white">
