@@ -5,7 +5,7 @@ import { Check, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 interface PhaseCardProps {
   icon: LucideIcon;
-  title: string;
+  title: React.ReactNode;
   subtitle: string;
   description: string;
   timeEstimate: string;
