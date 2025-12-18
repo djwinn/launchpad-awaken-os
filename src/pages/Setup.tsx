@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
@@ -12,22 +12,13 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Check, Circle, User, Calendar, Link2, FileText, CreditCard, Pencil, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
 import { LocationIdModal } from '@/components/setup/LocationIdModal';
 import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, SETUP_ITEM_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
+import { getPhase1Data, updatePhase1Data, type Phase1Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
-
-interface SetupProgress {
-  profile_complete: boolean;
-  calendar_connected: boolean;
-  booking_page_created: boolean;
-  contract_prepared: boolean;
-  payments_connected: boolean;
-  location_id: string | null;
-}
 
 const setupItems = [
   {
@@ -73,17 +64,17 @@ const setupItems = [
 ] as const;
 
 const Setup = () => {
-  const { user, loading } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
-  const [progress, setProgress] = useState<SetupProgress>({
+  const [progress, setProgress] = useState<Phase1Data>({
+    items_complete: 0,
     profile_complete: false,
     calendar_connected: false,
     booking_page_created: false,
     contract_prepared: false,
     payments_connected: false,
-    location_id: null,
   });
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -92,32 +83,14 @@ const Setup = () => {
   const [hasShownLocationPrompt, setHasShownLocationPrompt] = useState(false);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
 
     const loadProgress = async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('profile_complete, calendar_connected, booking_page_created, contract_prepared, payments_connected, location_id')
-        .eq('user_email', user.email)
-        .maybeSingle();
-
-      if (!error && data) {
-        setProgress({
-          profile_complete: data.profile_complete ?? false,
-          calendar_connected: data.calendar_connected ?? false,
-          booking_page_created: data.booking_page_created ?? false,
-          contract_prepared: data.contract_prepared ?? false,
-          payments_connected: data.payments_connected ?? false,
-          location_id: data.location_id ?? null,
-        });
-        
-        // Show location modal on first visit if no location_id
-        if (!data.location_id && !hasShownLocationPrompt) {
-          setShowLocationModal(true);
-          setHasShownLocationPrompt(true);
-        }
-      } else if (!data && !hasShownLocationPrompt) {
-        // New user, show modal
+      const data = await getPhase1Data(account.location_id);
+      setProgress(data);
+      
+      // Show location modal on first visit if no location_id in data
+      if (!data.location_id && !hasShownLocationPrompt) {
         setShowLocationModal(true);
         setHasShownLocationPrompt(true);
       }
@@ -125,7 +98,7 @@ const Setup = () => {
     };
 
     loadProgress();
-  }, [user, loading, hasShownLocationPrompt]);
+  }, [account, hasShownLocationPrompt]);
 
   const completedCount = [
     progress.profile_complete,
@@ -134,17 +107,24 @@ const Setup = () => {
     progress.contract_prepared,
     progress.payments_connected,
   ].filter(Boolean).length;
-  const progressPercentage = 20 + (completedCount * 16); // Start at 20%, each item adds 16%
+  const progressPercentage = 20 + (completedCount * 16);
   const allComplete = completedCount === 5;
 
   const handleItemComplete = async (itemId: string) => {
-    if (!user?.email) return;
+    if (!account?.location_id) return;
 
     const newProgress = { ...progress, [itemId]: true };
-    setProgress(newProgress as SetupProgress);
+    setProgress(newProgress);
     setActiveItem(null);
 
-    // Update database
+    await updatePhase1Data(account.location_id, { [itemId]: true });
+    await refreshAccount();
+
+    toast({
+      title: "Step completed!",
+      description: getRandomCompletionMessage(),
+    });
+
     const newCompletedCount = [
       newProgress.profile_complete,
       newProgress.calendar_connected,
@@ -152,24 +132,8 @@ const Setup = () => {
       newProgress.contract_prepared,
       newProgress.payments_connected,
     ].filter(Boolean).length;
-    const phase1Complete = newCompletedCount === 5;
 
-    await supabase
-      .from('user_progress')
-      .update({
-        [itemId]: true,
-        phase1_progress: newCompletedCount,
-        phase1_complete: phase1Complete,
-      })
-      .eq('user_email', user.email);
-
-    toast({
-      title: "Step completed!",
-      description: getRandomCompletionMessage(),
-    });
-
-    // Check if all complete
-    if (phase1Complete) {
+    if (newCompletedCount === 5) {
       setConfettiVisible(true);
       setTimeout(() => {
         setConfettiVisible(false);
@@ -179,28 +143,13 @@ const Setup = () => {
   };
 
   const handleItemUncomplete = async (itemId: string) => {
-    if (!user?.email) return;
+    if (!account?.location_id) return;
 
     const newProgress = { ...progress, [itemId]: false };
-    setProgress(newProgress as SetupProgress);
+    setProgress(newProgress);
 
-    // Update database
-    const newCompletedCount = [
-      newProgress.profile_complete,
-      newProgress.calendar_connected,
-      newProgress.booking_page_created,
-      newProgress.contract_prepared,
-      newProgress.payments_connected,
-    ].filter(Boolean).length;
-
-    await supabase
-      .from('user_progress')
-      .update({
-        [itemId]: false,
-        phase1_progress: newCompletedCount,
-        phase1_complete: false,
-      })
-      .eq('user_email', user.email);
+    await updatePhase1Data(account.location_id, { [itemId]: false });
+    await refreshAccount();
 
     toast({
       title: "Step unmarked",
@@ -209,15 +158,9 @@ const Setup = () => {
   };
 
   const handleSaveLocationId = async (locationId: string) => {
-    if (!user?.email) return;
+    if (!account?.location_id) return;
 
-    await supabase
-      .from('user_progress')
-      .upsert({
-        user_email: user.email,
-        location_id: locationId,
-      }, { onConflict: 'user_email' });
-
+    await updatePhase1Data(account.location_id, { location_id: locationId });
     setProgress(prev => ({ ...prev, location_id: locationId }));
     setShowLocationModal(false);
     
@@ -236,17 +179,12 @@ const Setup = () => {
     return "You're ready for business!";
   };
 
-  if (loading || loadingData) {
+  if (loadingData || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (
@@ -333,7 +271,7 @@ const Setup = () => {
         {/* Checklist */}
         <div className="space-y-4">
           {setupItems.map((item) => {
-            const isComplete = Boolean(progress[item.id as keyof Omit<SetupProgress, 'location_id'>]);
+            const isComplete = Boolean(progress[item.id as keyof Omit<Phase1Data, 'items_complete' | 'location_id'>]);
             const Icon = item.icon;
 
             return (
@@ -413,7 +351,6 @@ const Setup = () => {
                       className="text-xs text-muted-foreground hover:text-foreground mt-2 ml-14"
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Just close, doesn't mark complete
                       }}
                     >
                       I'll do this later
@@ -429,7 +366,7 @@ const Setup = () => {
       {/* Setup Item Modal */}
       <SetupItemModal
         itemId={activeItem}
-        isComplete={activeItem && activeItem !== 'location_id' ? Boolean(progress[activeItem as keyof Omit<SetupProgress, 'location_id'>]) : false}
+        isComplete={activeItem && activeItem !== 'location_id' ? Boolean(progress[activeItem as keyof Omit<Phase1Data, 'items_complete' | 'location_id'>]) : false}
         onClose={() => setActiveItem(null)}
         onComplete={handleItemComplete}
         locationId={progress.location_id}
