@@ -17,6 +17,7 @@ export interface Phase2Data {
   started: boolean;
   social_accounts_connected: boolean;
   social_capture_active: boolean;
+  social_capture_toolkit?: string;
 }
 
 // Phase 3 data structure
@@ -108,6 +109,7 @@ export async function getPhase2Data(locationId: string): Promise<Phase2Data> {
     started: (phase2Data.started as boolean) || false,
     social_accounts_connected: (phase2Data.social_accounts_connected as boolean) || false,
     social_capture_active: (phase2Data.social_capture_active as boolean) || false,
+    social_capture_toolkit: phase2Data.social_capture_toolkit as string | undefined,
   };
 }
 
