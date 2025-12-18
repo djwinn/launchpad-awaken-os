@@ -7,22 +7,23 @@ import { Label } from '@/components/ui/label';
 import { Check, Calendar, Bot, Bell, Target, Link } from 'lucide-react';
 import { z } from 'zod';
 import awakenLogo from '@/assets/awaken-logo-white.png';
-
 interface LandingPageProps {
   onStartClick: (name: string, email: string) => void;
   className?: string;
 }
-
 const emailSchema = z.string().trim().email({
   message: "Please enter a valid email address"
 });
-
-const benefits = [
-  { bold: "Receive clients", rest: "Booking, contracts, payments. Done." },
-  { bold: "Get leads while you sleep", rest: "When people engage with your content, they automatically get your booking link. You wake up with calls on your calendar." },
-  { bold: "Convert leads into clients", rest: "With a complete funnel — your offer, lead magnet, landing page, and nurture emails — written for you." }
-];
-
+const benefits = [{
+  bold: "Receive clients",
+  rest: "Booking, contracts, payments. Done."
+}, {
+  bold: "Get leads while you sleep",
+  rest: "When people engage with your content, they automatically get your booking link. You wake up with calls on your calendar."
+}, {
+  bold: "Convert leads into clients",
+  rest: "With a complete funnel — your offer, lead magnet, landing page, and nurture emails — written for you."
+}];
 export function LandingPage({
   onStartClick,
   className
@@ -93,7 +94,7 @@ export function LandingPage({
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
           <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+            <h2 className="text-2xl font-bold text-muted-foreground md:text-xl">
               After a few hours, you'll be ready to:
             </h2>
             <ul className="space-y-4">
@@ -104,8 +105,8 @@ export function LandingPage({
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-foreground">{benefit.bold}</span>
-                    <span className="text-base text-foreground/80 leading-relaxed">{benefit.rest}</span>
+                    <span className="font-bold text-foreground text-2xl">{benefit.bold}</span>
+                    <span className="text-base leading-relaxed text-muted-foreground">{benefit.rest}</span>
                   </div>
                 </li>)}
             </ul>
