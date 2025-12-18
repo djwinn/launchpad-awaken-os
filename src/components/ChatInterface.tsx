@@ -276,7 +276,7 @@ export function ChatInterface({
 
           // Save to database
           if (conversationId) {
-            await updateConversationMessages(conversationId, finalMessages);
+            await updateConversationMessages(conversationId, finalMessages, locationId);
           }
           if (isOutputComplete(assistantContent)) {
             onOutputComplete();
@@ -344,13 +344,13 @@ export function ChatInterface({
         }];
         setMessages(finalMessages);
         if (conversationId) {
-          await updateConversationMessages(conversationId, finalMessages);
+          await updateConversationMessages(conversationId, finalMessages, locationId);
         }
         if (isOutputComplete(assistantContent)) {
           if (conversationId) {
             await markConversationComplete(conversationId, {
               completed: true
-            });
+            }, locationId);
           }
           setTimeout(() => onOutputComplete(), 1000);
         }
