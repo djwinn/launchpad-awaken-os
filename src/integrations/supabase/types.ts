@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string
+          demo_business: string | null
+          demo_email: string | null
+          demo_name: string | null
+          expires_at: string | null
+          id: string
+          is_demo: boolean
+          location_id: string
+          phase_1_complete: boolean
+          phase_1_data: Json | null
+          phase_2_complete: boolean
+          phase_2_data: Json | null
+          phase_3_complete: boolean
+          phase_3_data: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          demo_business?: string | null
+          demo_email?: string | null
+          demo_name?: string | null
+          expires_at?: string | null
+          id?: string
+          is_demo?: boolean
+          location_id: string
+          phase_1_complete?: boolean
+          phase_1_data?: Json | null
+          phase_2_complete?: boolean
+          phase_2_data?: Json | null
+          phase_3_complete?: boolean
+          phase_3_data?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          demo_business?: string | null
+          demo_email?: string | null
+          demo_name?: string | null
+          expires_at?: string | null
+          id?: string
+          is_demo?: boolean
+          location_id?: string
+          phase_1_complete?: boolean
+          phase_1_data?: Json | null
+          phase_2_complete?: boolean
+          phase_2_data?: Json | null
+          phase_3_complete?: boolean
+          phase_3_data?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           completed: boolean | null
