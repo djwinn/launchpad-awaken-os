@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
@@ -12,17 +12,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Check, Link2, Zap, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getRandomCompletionMessage } from '@/lib/motivational-content';
+import { getPhase2Data, updatePhase2Data, type Phase2Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
-
-interface SocialCaptureProgress {
-  social_accounts_connected: boolean;
-  social_capture_active: boolean;
-  phase1_complete: boolean;
-}
 
 const socialCaptureItems = [
   {
@@ -48,41 +42,29 @@ const socialCaptureItems = [
 ] as const;
 
 const SocialCapture = () => {
-  const { user, loading } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
-  const [progress, setProgress] = useState<SocialCaptureProgress>({
+  const [progress, setProgress] = useState<Phase2Data>({
+    started: false,
     social_accounts_connected: false,
     social_capture_active: false,
-    phase1_complete: false,
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
 
     const loadProgress = async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_email', user.email)
-        .maybeSingle();
-
-      if (!error && data) {
-        const d = data as any;
-        setProgress({
-          social_accounts_connected: d.social_accounts_connected ?? false,
-          social_capture_active: d.social_capture_active ?? false,
-          phase1_complete: d.phase1_complete ?? false,
-        });
-      }
+      const data = await getPhase2Data(account.location_id);
+      setProgress(data);
       setLoadingData(false);
     };
 
     loadProgress();
-  }, [user, loading]);
+  }, [account]);
 
   const completedCount = [
     progress.social_accounts_connected,
@@ -94,35 +76,29 @@ const SocialCapture = () => {
 
   const isItemLocked = (item: typeof socialCaptureItems[number]) => {
     if (!item.requiresPrevious) return false;
-    return !progress[item.requiresPrevious as keyof SocialCaptureProgress];
+    return !progress[item.requiresPrevious as keyof Phase2Data];
   };
 
   const handleItemComplete = async (itemId: string) => {
-    if (!user?.email) return;
+    if (!account?.location_id) return;
 
     const newProgress = { ...progress, [itemId]: true };
-    setProgress(newProgress as SocialCaptureProgress);
+    setProgress(newProgress);
 
-    const newCompletedCount = [
-      newProgress.social_accounts_connected,
-      newProgress.social_capture_active,
-    ].filter(Boolean).length;
-    const phase2Complete = newCompletedCount === 2;
-
-    await supabase
-      .from('user_progress')
-      .update({
-        [itemId]: true,
-        phase2_complete: phase2Complete,
-      })
-      .eq('user_email', user.email);
+    await updatePhase2Data(account.location_id, { [itemId]: true });
+    await refreshAccount();
 
     toast({
       title: "Step completed!",
       description: getRandomCompletionMessage(),
     });
 
-    if (phase2Complete) {
+    const newCompletedCount = [
+      newProgress.social_accounts_connected,
+      newProgress.social_capture_active,
+    ].filter(Boolean).length;
+
+    if (newCompletedCount === 2) {
       setConfettiVisible(true);
       setTimeout(() => {
         setConfettiVisible(false);
@@ -138,7 +114,7 @@ const SocialCapture = () => {
   };
 
   const getItemStatus = (item: typeof socialCaptureItems[number]) => {
-    const isComplete = progress[item.id as keyof SocialCaptureProgress];
+    const isComplete = progress[item.id as keyof Phase2Data];
     const locked = isItemLocked(item);
     
     if (isComplete) return 'complete';
@@ -157,17 +133,12 @@ const SocialCapture = () => {
     }
   };
 
-  if (loading || loadingData) {
+  if (loadingData || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (

@@ -1,72 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, CheckCircle, MessageSquareMore, Magnet } from 'lucide-react';
+import { Loader2, CheckCircle, MessageSquareMore, Magnet } from 'lucide-react';
 import { PhaseCard } from '@/components/dashboard/PhaseCard';
 import { ProgressHeader } from '@/components/dashboard/ProgressHeader';
-import {
-  getOrCreateUserProgress,
-  calculateOverallProgress,
-  getProgressMessage,
-  type UserProgress,
-} from '@/lib/user-progress';
-import { supabase } from '@/integrations/supabase/client';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const Dashboard = () => {
-  const { user, loading, signOut } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
-  const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(true);
-  const [hasIncompleteChat, setHasIncompleteChat] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
-    
-    if (!user?.email) {
+    if (account) {
       setLoadingProgress(false);
-      return;
     }
+  }, [account]);
 
-    const loadProgress = async () => {
-      const userProgress = await getOrCreateUserProgress(user.email);
-      if (userProgress) {
-        // Count completed funnels
-        const { count } = await supabase
-          .from('conversations')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_email', user.email)
-          .eq('completed', true);
-
-        if (count !== null && count !== userProgress.funnels_created) {
-          setProgress({ ...userProgress, funnels_created: count });
-        } else {
-          setProgress(userProgress);
-        }
-      }
-
-      // Check for incomplete conversation
-      const { data: incomplete } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('user_email', user.email)
-        .eq('completed', false)
-        .limit(1);
-
-      setHasIncompleteChat((incomplete?.length || 0) > 0);
-      setLoadingProgress(false);
-    };
-
-    loadProgress();
-  }, [user, loading]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  if (loading || loadingProgress) {
+  if (loadingProgress || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -74,57 +26,67 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) {
-    navigate('/');
-    return null;
-  }
+  // Get name from demo account or default
+  const firstName = account.demo_name?.split(' ')[0] || 'there';
 
-  const firstName = user.user_metadata?.name?.split(' ')[0] || user.email?.split('@')[0] || 'there';
-  const overallProgress = progress ? calculateOverallProgress(progress) : 10;
+  // Calculate progress based on phase completion
+  const calculateProgress = () => {
+    let total = 10; // Starting bonus
+    if (account.phase_1_complete) total += 30;
+    if (account.phase_2_complete) total += 30;
+    if (account.phase_3_complete) total += 30;
+    return Math.min(100, total);
+  };
+
+  const getProgressMessage = (percentage: number): string => {
+    if (percentage <= 30) {
+      return "Great start — your foundation is taking shape";
+    } else if (percentage <= 60) {
+      return "You're making real progress";
+    } else if (percentage < 100) {
+      return "Almost there — just a few more steps";
+    } else {
+      return "You're fully ready for business!";
+    }
+  };
+
+  const overallProgress = calculateProgress();
   const progressMessage = getProgressMessage(overallProgress);
 
+  // Get phase data from JSON fields
+  const phase1Data = account.phase_1_data as Record<string, unknown> || {};
+  const phase2Data = account.phase_2_data as Record<string, unknown> || {};
+  const phase3Data = account.phase_3_data as Record<string, unknown> || {};
+
+  // Phase 1 progress (items completed out of 5)
+  const phase1ItemsComplete = (phase1Data.items_complete as number) || 0;
+  const phase1InProgress = phase1ItemsComplete > 0 && !account.phase_1_complete;
+
   // Determine phase statuses
-  const phase1Status: 'not-started' | 'in-progress' | 'complete' = progress?.phase1_complete
+  const phase1Status: 'not-started' | 'in-progress' | 'complete' = account.phase_1_complete
     ? 'complete'
-    : (progress?.phase1_progress ?? 0) > 0
+    : phase1InProgress
     ? 'in-progress'
     : 'not-started';
 
-  const phase2InProgress = Boolean(
-    (progress as any)?.social_accounts_connected || 
-    (progress as any)?.social_capture_active
-  );
-  const phase2Complete = Boolean(
-    (progress as any)?.social_accounts_connected && 
-    (progress as any)?.social_capture_active
-  );
-  const phase2Status: 'not-started' | 'in-progress' | 'complete' = phase2Complete
+  const phase2InProgress = Boolean(phase2Data.started);
+  const phase2Status: 'not-started' | 'in-progress' | 'complete' = account.phase_2_complete
     ? 'complete'
     : phase2InProgress
     ? 'in-progress'
     : 'not-started';
 
-  // Phase 3 status based on new funnel columns
-  const phase3InProgress = Boolean(
-    (progress as any)?.funnel_craft_complete || 
-    (progress as any)?.funnel_build_complete
-  );
-  const phase3Complete = Boolean(
-    (progress as any)?.funnel_craft_complete && 
-    (progress as any)?.funnel_build_complete
-  );
-  const phase3Status: 'not-started' | 'in-progress' | 'complete' = phase3Complete
+  const phase3InProgress = Boolean(phase3Data.started);
+  const phase3Status: 'not-started' | 'in-progress' | 'complete' = account.phase_3_complete
     ? 'complete'
     : phase3InProgress
     ? 'in-progress'
     : 'not-started';
 
-  const hasFunnels = (progress?.funnels_created ?? 0) > 0 || phase3Complete;
-
   // Determine button labels
   const phase1Button = phase1Status === 'complete' ? 'Review' : phase1Status === 'in-progress' ? 'Continue' : 'Get Started';
   const phase2Button = phase2Status === 'complete' ? 'Review' : 'Get Leads';
-  const phase3Button = phase3Complete ? 'Review' : phase3InProgress ? 'Continue' : 'Get Clients';
+  const phase3Button = account.phase_3_complete ? 'Review' : phase3InProgress ? 'Continue' : 'Get Clients';
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#605547' }}>
@@ -132,10 +94,9 @@ const Dashboard = () => {
       <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-10" style={{ backgroundColor: 'rgba(96, 85, 71, 0.9)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <img src={awakenLogo} alt="AwakenOS" className="h-8 md:h-10" />
-          <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-white hover:bg-white/10">
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          {account.is_demo && (
+            <span className="text-white/70 text-sm">Demo Mode</span>
+          )}
         </div>
       </header>
 
@@ -158,7 +119,7 @@ const Dashboard = () => {
               description="When someone wants to work with you, you'll be ready — with a booking page, professional contracts, and payments all set up. No more scrambling."
               timeEstimate="~17 minutes"
               status={phase1Status}
-              progress={{ current: progress?.phase1_progress ?? 0, total: 5 }}
+              progress={{ current: phase1ItemsComplete, total: 5 }}
               buttonLabel={phase1Button}
               onClick={() => navigate('/setup')}
             />
@@ -183,8 +144,8 @@ const Dashboard = () => {
               status={phase3Status}
               buttonLabel={phase3Button}
               onClick={() => navigate('/funnel')}
-              secondaryButtonLabel={phase3Complete ? "View Outputs" : undefined}
-              onSecondaryClick={phase3Complete ? () => navigate('/outputs') : undefined}
+              secondaryButtonLabel={account.phase_3_complete ? "View Outputs" : undefined}
+              onSecondaryClick={account.phase_3_complete ? () => navigate('/outputs') : undefined}
             />
           </div>
 

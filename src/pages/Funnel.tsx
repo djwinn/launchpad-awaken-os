@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
@@ -12,17 +12,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Check, Pencil, Video, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getRandomCompletionMessage } from '@/lib/motivational-content';
+import { getPhase3Data, updatePhase3Data, type Phase3Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
-
-interface FunnelProgress {
-  funnel_craft_complete: boolean;
-  funnel_build_complete: boolean;
-  funnel_blueprint: string | null;
-}
 
 const funnelItems = [
   {
@@ -49,41 +43,29 @@ const funnelItems = [
 ] as const;
 
 const Funnel = () => {
-  const { user, loading } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
-  const [progress, setProgress] = useState<FunnelProgress>({
+  const [progress, setProgress] = useState<Phase3Data>({
+    started: false,
     funnel_craft_complete: false,
     funnel_build_complete: false,
-    funnel_blueprint: null,
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
 
     const loadProgress = async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_email', user.email)
-        .maybeSingle();
-
-      if (!error && data) {
-        const d = data as any;
-        setProgress({
-          funnel_craft_complete: d.funnel_craft_complete ?? false,
-          funnel_build_complete: d.funnel_build_complete ?? false,
-          funnel_blueprint: d.funnel_blueprint ?? null,
-        });
-      }
+      const data = await getPhase3Data(account.location_id);
+      setProgress(data);
       setLoadingData(false);
     };
 
     loadProgress();
-  }, [user, loading]);
+  }, [account]);
 
   const completedCount = [
     progress.funnel_craft_complete,
@@ -95,7 +77,7 @@ const Funnel = () => {
 
   const isItemLocked = (item: typeof funnelItems[number]) => {
     if (!item.requiresPrevious) return false;
-    return !progress[item.requiresPrevious as keyof FunnelProgress];
+    return !progress[item.requiresPrevious as keyof Phase3Data];
   };
 
   const getProgressMessage = () => {
@@ -105,7 +87,7 @@ const Funnel = () => {
   };
 
   const getItemStatus = (item: typeof funnelItems[number]) => {
-    const isComplete = progress[item.id as keyof FunnelProgress];
+    const isComplete = progress[item.id as keyof Phase3Data];
     const locked = isItemLocked(item);
     
     if (isComplete) return 'complete';
@@ -124,17 +106,12 @@ const Funnel = () => {
     }
   };
 
-  if (loading || loadingData) {
+  if (loadingData || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (
