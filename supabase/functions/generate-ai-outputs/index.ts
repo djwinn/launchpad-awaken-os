@@ -1,12 +1,19 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-location-id',
 };
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+
+// Input validation
+const RequestSchema = z.object({
+  conversationHistory: z.string().min(1).max(200000)
+});
 
 const knowledgeBasePrompt = `You are generating a Knowledge Base document for an AI chatbot that will represent a coach's business. 
 
@@ -172,13 +179,40 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationHistory } = await req.json();
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    // Validate authentication
+    const { locationId, error: authError } = await validateLocationId(req);
+    if (authError) {
+      return createUnauthorizedResponse(authError, corsHeaders);
     }
 
-    console.log('Generating AI outputs from conversation history');
+    // Check rate limit
+    const rateLimit = checkRateLimit(locationId!, 'generate-ai-outputs');
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
+    const rawBody = await req.json();
+    
+    // Validate input
+    const parseResult = RequestSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { conversationHistory } = parseResult.data;
+    
+    if (!LOVABLE_API_KEY) {
+      console.error('[GENERATE-OUTPUTS] API key not configured');
+      return new Response(
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[GENERATE-OUTPUTS] Processing request');
 
     // Generate Knowledge Base
     const kbResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -198,9 +232,11 @@ serve(async (req) => {
     });
 
     if (!kbResponse.ok) {
-      const errorText = await kbResponse.text();
-      console.error('Knowledge base generation error:', kbResponse.status, errorText);
-      throw new Error(`Failed to generate knowledge base: ${kbResponse.status}`);
+      console.error('[GENERATE-OUTPUTS] Knowledge base generation failed');
+      return new Response(
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const kbData = await kbResponse.json();
@@ -224,15 +260,15 @@ serve(async (req) => {
     });
 
     if (!biResponse.ok) {
-      const errorText = await biResponse.text();
-      console.error('Bot instructions generation error:', biResponse.status, errorText);
-      throw new Error(`Failed to generate bot instructions: ${biResponse.status}`);
+      console.error('[GENERATE-OUTPUTS] Bot instructions generation failed');
+      return new Response(
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const biData = await biResponse.json();
     const botInstructions = biData.choices?.[0]?.message?.content || '';
-
-    console.log('AI outputs generated successfully');
 
     return new Response(JSON.stringify({ 
       knowledgeBase, 
@@ -241,9 +277,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Generate AI outputs error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error('[GENERATE-OUTPUTS] Error:', error instanceof Error ? error.message : 'Unknown');
+    return new Response(JSON.stringify({ error: 'An error occurred' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

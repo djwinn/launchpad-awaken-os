@@ -1,12 +1,24 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-location-id',
 };
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+
+// Input validation schema
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().min(1).max(50000)
+});
+
+const RequestSchema = z.object({
+  messages: z.array(MessageSchema).min(1).max(100)
+});
 
 const systemPrompt = `You are a friendly, warm AI assistant helping a coach train their AI assistant. Your job is to interview them about their business through a conversational flow.
 
@@ -68,13 +80,40 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    // Validate authentication
+    const { locationId, error: authError } = await validateLocationId(req);
+    if (authError) {
+      return createUnauthorizedResponse(authError, corsHeaders);
     }
 
-    console.log('AI Foundation chat - processing', messages.length, 'messages');
+    // Check rate limit
+    const rateLimit = checkRateLimit(locationId!, 'ai-foundation-chat');
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
+    const rawBody = await req.json();
+    
+    // Validate input
+    const parseResult = RequestSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { messages } = parseResult.data;
+    
+    if (!LOVABLE_API_KEY) {
+      console.error('[AI-FOUNDATION] API key not configured');
+      return new Response(
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[AI-FOUNDATION] Processing request');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -93,37 +132,36 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
+      console.error('[AI-FOUNDATION] API error:', response.status);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
+        return new Response(JSON.stringify({ error: 'Service busy. Please try again.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Usage limit reached. Please add credits to continue.' }), {
+        return new Response(JSON.stringify({ error: 'Service unavailable.' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       
-      throw new Error(`AI gateway error: ${response.status}`);
+      return new Response(
+        JSON.stringify({ error: 'Service unavailable' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
     const message = data.choices?.[0]?.message?.content || '';
-    
-    console.log('AI Foundation response generated, length:', message.length);
 
     return new Response(JSON.stringify({ message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('AI Foundation chat error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    console.error('[AI-FOUNDATION] Error:', error instanceof Error ? error.message : 'Unknown');
+    return new Response(JSON.stringify({ error: 'An error occurred' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
