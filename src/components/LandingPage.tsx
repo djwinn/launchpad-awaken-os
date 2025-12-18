@@ -98,12 +98,15 @@ export function LandingPage({
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => <li key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5" style={{
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-1" style={{
                 backgroundColor: '#56bc77'
               }}>
                     <Check className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-foreground/90 leading-relaxed"><strong>{benefit.bold}:</strong> {benefit.rest}</span>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold text-foreground">{benefit.bold}</span>
+                    <span className="text-base text-foreground/80 leading-relaxed">{benefit.rest}</span>
+                  </div>
                 </li>)}
             </ul>
           </div>
