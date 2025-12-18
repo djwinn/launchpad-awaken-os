@@ -460,7 +460,7 @@ export function FunnelContextGathering({ userName, onContextComplete }: FunnelCo
                 <TrendingUp className="h-5 w-5 text-primary" />
               </div>
               <p className="text-sm text-muted-foreground">
-                {PHASE_INTRO_STATS.phase3}
+                {PHASE_INTRO_STATS.phase3.stat}
               </p>
             </div>
           </div>
