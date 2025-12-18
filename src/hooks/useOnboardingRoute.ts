@@ -48,7 +48,7 @@ export function getOnboardingRoute(
 
   // Phase 2 not complete → Phase 2
   if (!account.phase_2_complete) {
-    return { destination: 'phase2', path: '/social-capture' };
+    return { destination: 'phase2', path: '/phase2' };
   }
 
   // Phase 3 not complete → Phase 3
