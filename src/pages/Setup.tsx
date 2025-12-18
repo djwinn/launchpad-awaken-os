@@ -327,7 +327,7 @@ const Setup = () => {
         isComplete={activeItem && activeItem !== 'location_id' ? Boolean(progress[activeItem as keyof Omit<Phase1Data, 'items_complete' | 'location_id'>]) : false}
         onClose={() => setActiveItem(null)}
         onComplete={handleItemComplete}
-        locationId={progress.location_id}
+        locationId={account.location_id}
       />
 
 
