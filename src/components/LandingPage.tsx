@@ -16,7 +16,7 @@ const emailSchema = z.string().trim().email({
 });
 const benefits = [{
   bold: "Receive Clients Professionally",
-  rest: "A clean booking flow, legally-binding contracts, and seamless payments. Polished, connected, and ready to go."
+  rest: "A clean booking flow, legally-binding contracts, and seamless payments. Polished, connected, & ready to go."
 }, {
   bold: "Get leads while you sleep",
   rest: "When people engage with your content, they automatically get your booking link. You wake up with calls on your calendar."
