@@ -1,45 +1,64 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, MessageSquareMore, Magnet, Sparkles, ArrowRight } from 'lucide-react';
 import { PhaseCard } from '@/components/dashboard/PhaseCard';
 import { ProgressHeader } from '@/components/dashboard/ProgressHeader';
+import { CompletionDashboard } from '@/components/dashboard/CompletionDashboard';
+import { getOnboardingRoute, isWelcomeDismissed, dismissWelcome } from '@/hooks/useOnboardingRoute';
 import awakenLogo from '@/assets/awaken-logo-white.png';
-
-const WELCOME_DISMISSED_KEY = 'awaken_welcome_dismissed';
 
 const Dashboard = () => {
   const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loadingProgress, setLoadingProgress] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [currentView, setCurrentView] = useState<'loading' | 'welcome' | 'dashboard' | 'complete'>('loading');
 
   useEffect(() => {
-    if (account) {
-      setLoadingProgress(false);
-      
-      // Check if this is a new user who hasn't seen the welcome screen
-      const hasProgress = account.phase_1_complete || account.phase_2_complete || account.phase_3_complete;
-      const phase1Data = account.phase_1_data as Record<string, unknown> || {};
-      const hasStarted = (phase1Data.items_complete as number) > 0;
-      const welcomeDismissed = localStorage.getItem(`${WELCOME_DISMISSED_KEY}_${account.location_id}`);
-      
-      // Show welcome for new users who haven't started and haven't dismissed
-      if (!hasProgress && !hasStarted && !welcomeDismissed) {
-        setShowWelcome(true);
-      }
+    if (!account) return;
+
+    setLoadingProgress(false);
+
+    // Check if user explicitly wants to see dashboard overview
+    const viewOverride = searchParams.get('view');
+    if (viewOverride === 'overview') {
+      setCurrentView('dashboard');
+      return;
     }
-  }, [account]);
+
+    // Determine where user should be routed
+    const welcomeDismissed = isWelcomeDismissed(account.location_id);
+    const { destination, path } = getOnboardingRoute(account, welcomeDismissed);
+
+    switch (destination) {
+      case 'welcome':
+        setCurrentView('welcome');
+        break;
+      case 'complete':
+        setCurrentView('complete');
+        break;
+      case 'phase1':
+      case 'phase2':
+      case 'phase3':
+        // Auto-redirect to the appropriate phase
+        navigate(path, { replace: true });
+        break;
+      default:
+        setCurrentView('dashboard');
+    }
+  }, [account, navigate, searchParams]);
 
   const handleDismissWelcome = () => {
     if (account) {
-      localStorage.setItem(`${WELCOME_DISMISSED_KEY}_${account.location_id}`, 'true');
+      dismissWelcome(account.location_id);
     }
-    setShowWelcome(false);
+    // Go directly to Phase 1
+    navigate('/setup');
   };
 
-  if (loadingProgress || !account) {
+  if (loadingProgress || !account || currentView === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -47,10 +66,23 @@ const Dashboard = () => {
     );
   }
 
+  // Get name from demo account or default
+  const firstName = account.demo_name?.split(' ')[0] || 'there';
+
+  // Completion Dashboard
+  if (currentView === 'complete') {
+    return (
+      <CompletionDashboard
+        firstName={firstName}
+        onViewOutputs={() => navigate('/outputs')}
+      />
+    );
+  }
+
   // Welcome screen for new users
-  if (showWelcome) {
+  if (currentView === 'welcome') {
     const userName = account.demo_name?.split(' ')[0] || 'there';
-    
+
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#605547' }}>
         <header className="border-b border-white/10 backdrop-blur-sm" style={{ backgroundColor: 'rgba(96, 85, 71, 0.9)' }}>
@@ -58,13 +90,13 @@ const Dashboard = () => {
             <img src={awakenLogo} alt="AwakenOS" className="h-8 md:h-10" />
           </div>
         </header>
-        
+
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="max-w-2xl text-center space-y-8">
             <div className="w-16 h-16 rounded-full bg-[#ebcc89]/20 flex items-center justify-center mx-auto">
               <Sparkles className="h-8 w-8 text-[#ebcc89]" />
             </div>
-            
+
             <div className="space-y-4">
               <h1 className="text-3xl md:text-4xl font-bold text-white">
                 Welcome{userName !== 'there' ? `, ${userName}` : ''}! 👋
@@ -73,7 +105,7 @@ const Dashboard = () => {
                 You're about to set up your complete coaching business system.
               </p>
             </div>
-            
+
             <div className="bg-white/10 rounded-xl p-6 text-left space-y-4">
               <p className="text-white/90">
                 In the next hour or so, you'll have everything you need to:
@@ -93,16 +125,16 @@ const Dashboard = () => {
                 </li>
               </ul>
             </div>
-            
+
             <p className="text-white/60 text-sm">
               Take your time — there's no rush. Each section is designed to guide you step by step.
             </p>
-            
-            <Button 
+
+            <Button
               onClick={handleDismissWelcome}
               className="bg-[#ebcc89] text-black hover:bg-[#d4b876] px-8 py-6 text-lg"
             >
-              Let's Get Started
+              Start the Guided Setup
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
@@ -110,9 +142,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  // Get name from demo account or default
-  const firstName = account.demo_name?.split(' ')[0] || 'there';
 
   // Calculate progress based on phase completion
   const calculateProgress = () => {
