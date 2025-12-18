@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Circle, Globe, Mail, MessageSquare, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, MessageSquare, FileText, Mail, Globe, Share2, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getPhase2Data, calculatePhase2Progress, type Phase2Data } from '@/lib/phase-data';
@@ -19,40 +19,49 @@ import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const phase2Items = [
   {
-    id: 'domain_connected',
-    title: 'Connect Your Domain',
-    helperText: 'Make your landing page live at yourbrand.com',
-    completedText: 'Domain connected ✓',
-    time: '~15 min',
-    icon: Globe,
-    route: '/phase2/domain',
-  },
-  {
-    id: 'email_domain_connected',
-    title: 'Set Up Email Sending',
-    helperText: 'So your lead magnet actually gets delivered',
-    completedText: 'Email sending configured ✓',
-    time: '~15 min',
-    icon: Mail,
-    route: '/phase2/email-setup',
-  },
-  {
     id: 'content_generated',
     title: 'Create Your Content',
-    helperText: 'AI helps you write your post, DM, and landing page',
+    helperText: "Let's write everything you need in about 10 minutes",
     completedText: 'Content created ✓',
     time: '~10 min',
     icon: MessageSquare,
-    route: '/phase2/ai-conversation',
+    route: '/phase2/content',
   },
   {
-    id: 'automation_built',
-    title: 'Build Your Automation',
-    helperText: 'Connect the pieces in your dashboard',
-    completedText: 'Automation built ✓',
+    id: 'landing_page_built',
+    title: 'Build Your Landing Page',
+    helperText: 'Paste your copy into the template',
+    completedText: 'Landing page built ✓',
     time: '~10 min',
-    icon: Zap,
-    route: '/phase2/build-automation',
+    icon: FileText,
+    route: '/phase2/landing-page',
+  },
+  {
+    id: 'email_delivery_built',
+    title: 'Set Up Email Delivery',
+    helperText: 'So your lead magnet actually gets delivered',
+    completedText: 'Email delivery configured ✓',
+    time: '~10 min',
+    icon: Mail,
+    route: '/phase2/email-delivery',
+  },
+  {
+    id: 'go_live',
+    title: 'Go Live',
+    helperText: 'Connect your domain and email so everything works',
+    completedText: 'Live and working ✓',
+    time: '~15 min',
+    icon: Globe,
+    route: '/phase2/go-live',
+  },
+  {
+    id: 'tested',
+    title: 'Connect Social & Test',
+    helperText: 'Set up IG/FB automation and test the whole flow',
+    completedText: 'Social connected & tested ✓',
+    time: '~10 min',
+    icon: Share2,
+    route: '/phase2/social-test',
   },
 ] as const;
 
@@ -63,15 +72,20 @@ const Phase2 = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [progress, setProgress] = useState<Phase2Data>({
     started: false,
+    content_generated: false,
+    content_outputs: null,
+    landing_page_built: false,
+    email_delivery_built: false,
     domain_connected: false,
     domain_value: '',
     has_domain: true,
-    email_domain_connected: false,
+    email_sending_configured: false,
     email_subdomain: '',
     email_from_address: '',
-    content_generated: false,
-    content_outputs: null,
-    automation_built: false,
+    page_published: false,
+    social_connected: false,
+    comment_automation_built: false,
+    tested: false,
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
@@ -89,14 +103,25 @@ const Phase2 = () => {
   }, [account]);
 
   const completedCount = calculatePhase2Progress(progress);
-  const progressPercentage = 20 + (completedCount * 20); // Start at 20% (from Phase 1), each step adds 20%
-  const allComplete = completedCount === 4;
+  const progressPercentage = 20 + (completedCount * 16); // Start at 20% (from Phase 1), each step adds 16%
+  const allComplete = completedCount === 5;
+
+  // Determine if "Go Live" step is complete (domain + email sending + page published)
+  const goLiveComplete = progress.domain_connected && progress.email_sending_configured && progress.page_published;
+
+  const isItemComplete = (itemId: string): boolean => {
+    if (itemId === 'go_live') {
+      return goLiveComplete;
+    }
+    return Boolean(progress[itemId as keyof Phase2Data]);
+  };
 
   const getProgressMessage = () => {
     if (completedCount === 0) return "Let's get your lead machine running!";
     if (completedCount === 1) return "Great start! Keep going.";
-    if (completedCount === 2) return "Halfway there!";
-    if (completedCount === 3) return "Almost done!";
+    if (completedCount === 2) return "Making progress!";
+    if (completedCount === 3) return "Over halfway there!";
+    if (completedCount === 4) return "Almost done!";
     return "Your lead machine is live!";
   };
 
@@ -182,8 +207,8 @@ const Phase2 = () => {
 
         {/* Checklist */}
         <div className="space-y-4">
-          {phase2Items.map((item) => {
-            const isComplete = Boolean(progress[item.id as keyof Phase2Data]);
+          {phase2Items.map((item, index) => {
+            const isComplete = isItemComplete(item.id);
             const Icon = item.icon;
 
             return (
@@ -205,7 +230,7 @@ const Phase2 = () => {
                 
                 <div className={cn("p-4", !isComplete && "pt-4")}>
                   <div className="flex items-center gap-4">
-                    {/* Status Icon */}
+                    {/* Step Number / Status Icon */}
                     <div className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
                       isComplete ? 'bg-[#56bc77]/10' : 'bg-muted'
@@ -213,7 +238,7 @@ const Phase2 = () => {
                       {isComplete ? (
                         <Check className="w-5 h-5 text-[#56bc77]" />
                       ) : (
-                        <Icon className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-lg font-semibold text-muted-foreground">{index + 1}</span>
                       )}
                     </div>
 
@@ -267,10 +292,11 @@ const Phase2 = () => {
 
           <div className="space-y-3 my-6">
             {[
-              'Domain connected',
-              'Email sending configured',
               'Content created',
-              'Automation built',
+              'Landing page built',
+              'Email automation active',
+              'Domain connected',
+              'Social automation live',
             ].map((text, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#56bc77] flex items-center justify-center">
@@ -283,7 +309,7 @@ const Phase2 = () => {
 
           <div className="bg-muted/50 rounded-lg p-4 mb-4">
             <p className="text-sm text-muted-foreground">
-              Ready to build a complete funnel with a full email sequence and offer? That's Phase 3.
+              Ready to build a complete funnel with more emails and an offer? That's Phase 3.
             </p>
           </div>
 
