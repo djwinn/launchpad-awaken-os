@@ -360,7 +360,8 @@ After generating, say: "Review it above and make any edits you need. When you're
     });
   };
 
-  const canComplete = !config.hasContractOutput || (contractText && disclaimerAccepted);
+  // Contract item can be completed anytime - AI chat is optional help, not required
+  const canComplete = true;
 
   return (
     <Sheet open={!!itemId} onOpenChange={() => onClose()}>
