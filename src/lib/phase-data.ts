@@ -11,12 +11,47 @@ export interface Phase1Data {
   location_id?: string;
 }
 
-// Phase 2 data structure
+// Phase 2 data structure (redesigned)
 export interface Phase2Data {
   started: boolean;
-  social_accounts_connected: boolean;
-  social_capture_active: boolean;
-  social_capture_toolkit?: string;
+  // Step 1: Domain
+  domain_connected: boolean;
+  domain_value: string;
+  has_domain: boolean;
+  // Step 2: Email
+  email_domain_connected: boolean;
+  email_subdomain: string;
+  email_from_address: string;
+  // Step 3: Content
+  content_generated: boolean;
+  content_outputs: Phase2ContentOutputs | null;
+  // Step 4: Automation
+  automation_built: boolean;
+}
+
+export interface Phase2ContentOutputs {
+  post_caption: string;
+  dm_template: string;
+  landing_page: {
+    headline: string;
+    subheadline: string;
+    button_text: string;
+  };
+  delivery_email: {
+    subject: string;
+    body: string;
+  };
+  followup_email: {
+    subject: string;
+    body: string;
+  };
+  // Store conversation context
+  coaching_type: string;
+  ideal_client: string;
+  main_problem: string;
+  lead_magnet: string;
+  next_step: string;
+  social_handle: string;
 }
 
 // Phase 3 data structure
@@ -134,16 +169,29 @@ export async function getPhase2Data(locationId: string): Promise<Phase2Data> {
   if (!phase2Data) {
     return {
       started: false,
-      social_accounts_connected: false,
-      social_capture_active: false,
+      domain_connected: false,
+      domain_value: '',
+      has_domain: true,
+      email_domain_connected: false,
+      email_subdomain: '',
+      email_from_address: '',
+      content_generated: false,
+      content_outputs: null,
+      automation_built: false,
     };
   }
 
   return {
     started: (phase2Data.started as boolean) || false,
-    social_accounts_connected: (phase2Data.social_accounts_connected as boolean) || false,
-    social_capture_active: (phase2Data.social_capture_active as boolean) || false,
-    social_capture_toolkit: phase2Data.social_capture_toolkit as string | undefined,
+    domain_connected: (phase2Data.domain_connected as boolean) || false,
+    domain_value: (phase2Data.domain_value as string) || '',
+    has_domain: phase2Data.has_domain !== false,
+    email_domain_connected: (phase2Data.email_domain_connected as boolean) || false,
+    email_subdomain: (phase2Data.email_subdomain as string) || '',
+    email_from_address: (phase2Data.email_from_address as string) || '',
+    content_generated: (phase2Data.content_generated as boolean) || false,
+    content_outputs: (phase2Data.content_outputs as Phase2ContentOutputs) || null,
+    automation_built: (phase2Data.automation_built as boolean) || false,
   };
 }
 
@@ -154,12 +202,26 @@ export async function updatePhase2Data(
   const currentData = await getPhase2Data(locationId);
   const newData = { ...currentData, ...updates, started: true };
   
-  const phase2Complete = newData.social_accounts_connected && newData.social_capture_active;
+  // Phase 2 is complete when all 4 steps are done
+  const phase2Complete = newData.domain_connected && 
+                         newData.email_domain_connected && 
+                         newData.content_generated && 
+                         newData.automation_built;
 
   return updateAccountData(locationId, {
     phase_2_data: newData,
     phase_2_complete: phase2Complete,
   });
+}
+
+// Helper to calculate Phase 2 progress (0-4 items)
+export function calculatePhase2Progress(data: Phase2Data): number {
+  let count = 0;
+  if (data.domain_connected) count++;
+  if (data.email_domain_connected) count++;
+  if (data.content_generated) count++;
+  if (data.automation_built) count++;
+  return count;
 }
 
 export async function getPhase3Data(locationId: string): Promise<Phase3Data> {
