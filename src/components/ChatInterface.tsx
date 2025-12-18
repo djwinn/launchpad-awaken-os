@@ -6,10 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2, Mic, MicOff, Paperclip, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
+import { transcribeAudio, parseDocument } from '@/lib/location-api';
 import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useAccount } from '@/contexts/AccountContext';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
 import botIcon from '@/assets/bot-icon.png';
@@ -45,6 +46,7 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { account } = useAccount();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -57,6 +59,8 @@ export function ChatInterface({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  const locationId = account?.location_id || '';
+
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
@@ -64,6 +68,15 @@ export function ChatInterface({
   }, []);
 
   const startRecording = useCallback(async () => {
+    if (!locationId) {
+      toast({
+        title: "Not authenticated",
+        description: "Please log in to use voice input.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
@@ -96,26 +109,7 @@ export function ChatInterface({
           reader.onloadend = async () => {
             const base64Audio = (reader.result as string).split(',')[1];
             
-            // Get session for authentication
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session?.access_token) {
-              throw new Error('Not authenticated');
-            }
-            
-            const response = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({ audio: base64Audio }),
-              }
-            );
-            
-            const data = await response.json();
+            const data = await transcribeAudio(locationId, base64Audio);
             
             if (data.error) {
               throw new Error(data.error);
@@ -155,7 +149,7 @@ export function ChatInterface({
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, locationId]);
 
   const toggleRecording = useCallback(() => {
     if (isRecording) {
@@ -172,30 +166,19 @@ export function ChatInterface({
     // Reset input so the same file can be selected again
     e.target.value = '';
 
+    if (!locationId) {
+      toast({
+        title: "Not authenticated",
+        description: "Please log in to upload files.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        throw new Error('Not authenticated');
-      }
-
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
+      const data = await parseDocument(locationId, file);
 
       if (data.error) {
         throw new Error(data.error);
@@ -222,7 +205,7 @@ export function ChatInterface({
     } finally {
       setIsUploading(false);
     }
-  }, [toast]);
+  }, [toast, locationId]);
 
   // Auto-scroll to bottom - triggers on messages change and loading state
   useEffect(() => {
@@ -240,7 +223,7 @@ export function ChatInterface({
 
   // Initialize conversation (only if no existing messages)
   useEffect(() => {
-    if (hasInitialized.current || messages.length > 0) return;
+    if (hasInitialized.current || messages.length > 0 || !locationId) return;
     hasInitialized.current = true;
 
     // Start the conversation with the AI
@@ -273,6 +256,7 @@ export function ChatInterface({
           role: initialMessage.role,
           content: initialMessage.content
         }],
+        locationId,
         onDelta: text => {
           assistantContent += text;
           setMessages([initialMessage, {
@@ -310,10 +294,11 @@ export function ChatInterface({
       });
     };
     startConversation();
-  }, [userInfo.name, messages.length, setMessages, onOutputComplete, conversationId]);
+  }, [userInfo.name, messages.length, setMessages, onOutputComplete, conversationId, locationId, funnelContext]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !locationId) return;
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -330,6 +315,7 @@ export function ChatInterface({
         role: m.role,
         content: m.content
       })),
+      locationId,
       onDelta: text => {
         assistantContent += text;
         setMessages(prev => {
@@ -380,12 +366,14 @@ export function ChatInterface({
       }
     });
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   };
+
   return <div className="flex flex-col h-screen bg-background">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-border/50">
@@ -478,7 +466,7 @@ export function ChatInterface({
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            💡 Tip: Upload documents, use the microphone, or paste existing materials to provide richer context.
+            Tip: Use the microphone for voice input, or paste content from your website, bio, or other materials.
           </p>
         </form>
       </div>
