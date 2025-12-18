@@ -11,45 +11,67 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Check, Link2, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Circle, Globe, Mail, MessageSquare, Zap, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { getRandomCompletionMessage } from '@/lib/motivational-content';
-import { getPhase2Data, updatePhase2Data, type Phase2Data } from '@/lib/phase-data';
+import { getPhase2Data, calculatePhase2Progress, type Phase2Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
-const socialCaptureItems = [
+const phase2Items = [
   {
-    id: 'social_accounts_connected',
-    title: 'Connect Your Social Accounts',
-    subtitle: 'Link Instagram and Facebook',
-    helperText: 'Connect your social accounts to enable the comment-to-DM automation.',
-    completedText: 'Accounts connected ✓',
-    time: '~5 min',
-    icon: Link2,
-    requiresPrevious: null,
+    id: 'domain_connected',
+    title: 'Connect Your Domain',
+    helperText: 'Make your landing page live at yourbrand.com',
+    completedText: 'Domain connected ✓',
+    time: '~15 min',
+    icon: Globe,
+    route: '/phase2/domain',
   },
   {
-    id: 'social_capture_active',
-    title: 'Activate Social Capture',
-    subtitle: 'Set up comment-to-DM automation',
-    helperText: 'Configure the workflow that DMs people who comment on your posts.',
-    completedText: 'Social capture active ✓',
+    id: 'email_domain_connected',
+    title: 'Set Up Email Sending',
+    helperText: 'So your lead magnet actually gets delivered',
+    completedText: 'Email sending configured ✓',
     time: '~15 min',
+    icon: Mail,
+    route: '/phase2/email-setup',
+  },
+  {
+    id: 'content_generated',
+    title: 'Create Your Content',
+    helperText: 'AI helps you write your post, DM, and landing page',
+    completedText: 'Content created ✓',
+    time: '~10 min',
+    icon: MessageSquare,
+    route: '/phase2/ai-conversation',
+  },
+  {
+    id: 'automation_built',
+    title: 'Build Your Automation',
+    helperText: 'Connect the pieces in your dashboard',
+    completedText: 'Automation built ✓',
+    time: '~10 min',
     icon: Zap,
-    requiresPrevious: null,
+    route: '/phase2/build-automation',
   },
 ] as const;
 
-const SocialCapture = () => {
+const Phase2 = () => {
   const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
   const [progress, setProgress] = useState<Phase2Data>({
     started: false,
-    social_accounts_connected: false,
-    social_capture_active: false,
+    domain_connected: false,
+    domain_value: '',
+    has_domain: true,
+    email_domain_connected: false,
+    email_subdomain: '',
+    email_from_address: '',
+    content_generated: false,
+    content_outputs: null,
+    automation_built: false,
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
@@ -66,71 +88,20 @@ const SocialCapture = () => {
     loadProgress();
   }, [account]);
 
-  const completedCount = [
-    progress.social_accounts_connected,
-    progress.social_capture_active,
-  ].filter(Boolean).length;
-  
-  const progressPercentage = Math.round((completedCount / 2) * 100);
-  const allComplete = completedCount === 2;
-
-  const isItemLocked = (item: typeof socialCaptureItems[number]) => {
-    if (!item.requiresPrevious) return false;
-    return !progress[item.requiresPrevious as keyof Phase2Data];
-  };
-
-  const handleItemComplete = async (itemId: string) => {
-    if (!account?.location_id) return;
-
-    const newProgress = { ...progress, [itemId]: true };
-    setProgress(newProgress);
-
-    await updatePhase2Data(account.location_id, { [itemId]: true });
-    await refreshAccount();
-
-    toast({
-      title: "Step completed!",
-      description: getRandomCompletionMessage(),
-    });
-
-    const newCompletedCount = [
-      newProgress.social_accounts_connected,
-      newProgress.social_capture_active,
-    ].filter(Boolean).length;
-
-    if (newCompletedCount === 2) {
-      setConfettiVisible(true);
-      setTimeout(() => {
-        setConfettiVisible(false);
-        setShowCelebration(true);
-      }, 3000);
-    }
-  };
+  const completedCount = calculatePhase2Progress(progress);
+  const progressPercentage = 20 + (completedCount * 20); // Start at 20% (from Phase 1), each step adds 20%
+  const allComplete = completedCount === 4;
 
   const getProgressMessage = () => {
-    if (completedCount === 0) return "Let's set up your lead capture system";
-    if (completedCount === 1) return "Great start — one more step to go";
-    return "Your social capture is live!";
+    if (completedCount === 0) return "Let's get your lead machine running!";
+    if (completedCount === 1) return "Great start! Keep going.";
+    if (completedCount === 2) return "Halfway there!";
+    if (completedCount === 3) return "Almost done!";
+    return "Your lead machine is live!";
   };
 
-  const getItemStatus = (item: typeof socialCaptureItems[number]) => {
-    const isComplete = progress[item.id as keyof Phase2Data];
-    const locked = isItemLocked(item);
-    
-    if (isComplete) return 'complete';
-    if (locked) return 'locked';
-    return 'not_started';
-  };
-
-  const handleItemClick = (item: typeof socialCaptureItems[number]) => {
-    const status = getItemStatus(item);
-    if (status === 'locked') return;
-    
-    if (item.id === 'social_accounts_connected') {
-      navigate('/social-capture/connect');
-    } else if (item.id === 'social_capture_active') {
-      navigate('/social-capture/activate');
-    }
+  const handleItemClick = (item: typeof phase2Items[number]) => {
+    navigate(item.route);
   };
 
   if (loadingData || !account) {
@@ -169,13 +140,13 @@ const SocialCapture = () => {
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <img src={awakenLogo} alt="AwakenOS" className="h-8" />
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="text-white hover:bg-white/10">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard?view=overview')} className="text-white hover:bg-white/10">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </div>
           <h1 className="text-2xl font-bold text-white">Get Leads While You Sleep</h1>
-          <p className="text-white/70 mt-1">Turn social comments into booked calls — automatically.</p>
+          <p className="text-white/70 mt-1">Turn comments into clients automatically</p>
         </div>
       </header>
 
@@ -184,8 +155,8 @@ const SocialCapture = () => {
         <div className="bg-white rounded-lg p-4 flex items-start gap-3">
           <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-foreground">Comment-to-DM automation converts 3x better than cold outreach.</p>
-            <p className="text-sm text-muted-foreground">When someone comments, they're already interested. Capture them instantly.</p>
+            <p className="text-sm font-medium text-foreground">Comment-to-DM automations convert 3x better than cold DMs</p>
+            <p className="text-sm text-muted-foreground">People who comment are already interested — they just need a nudge.</p>
           </div>
         </div>
       </div>
@@ -201,22 +172,26 @@ const SocialCapture = () => {
           <p className="text-sm text-muted-foreground">{getProgressMessage()}</p>
         </div>
 
+        {/* Description Card */}
+        <div className="mb-6 bg-white/10 rounded-lg p-4">
+          <p className="text-white/90 text-sm">
+            Set up a simple system where people comment on your post, get a DM with your free resource, 
+            and join your email list — all on autopilot.
+          </p>
+        </div>
+
         {/* Checklist */}
         <div className="space-y-4">
-          {socialCaptureItems.map((item) => {
-            const status = getItemStatus(item);
-            const isComplete = status === 'complete';
-            const isLocked = status === 'locked';
+          {phase2Items.map((item) => {
+            const isComplete = Boolean(progress[item.id as keyof Phase2Data]);
             const Icon = item.icon;
 
             return (
               <Card
                 key={item.id}
                 className={cn(
-                  'transition-all duration-200 bg-white overflow-hidden',
-                  isComplete && 'border border-[#56bc77]/30',
-                  isLocked && 'opacity-60',
-                  !isComplete && !isLocked && 'cursor-pointer hover:shadow-md'
+                  'transition-all duration-200 cursor-pointer hover:shadow-md bg-white overflow-hidden',
+                  isComplete && 'border border-[#56bc77]/30'
                 )}
                 onClick={() => handleItemClick(item)}
               >
@@ -227,18 +202,18 @@ const SocialCapture = () => {
                     <span className="text-sm font-medium text-white">Completed</span>
                   </div>
                 )}
-
-                <div className="p-4">
+                
+                <div className={cn("p-4", !isComplete && "pt-4")}>
                   <div className="flex items-center gap-4">
                     {/* Status Icon */}
                     <div className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative',
-                      isComplete ? 'bg-[#56bc77]/10' : isLocked ? 'bg-muted' : 'bg-[#827666]/10'
+                      'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                      isComplete ? 'bg-[#56bc77]/10' : 'bg-muted'
                     )}>
                       {isComplete ? (
                         <Check className="w-5 h-5 text-[#56bc77]" />
                       ) : (
-                        <Icon className={cn('w-5 h-5', isLocked ? 'text-muted-foreground' : 'text-[#827666]')} />
+                        <Icon className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
 
@@ -253,32 +228,25 @@ const SocialCapture = () => {
                           {item.time}
                         </span>
                       </div>
-                      {isComplete ? (
-                        <p className="text-sm text-muted-foreground mt-0.5">{item.completedText}</p>
-                      ) : isLocked && 'lockedText' in item ? (
-                        <p className="text-sm text-muted-foreground mt-0.5">{(item as any).lockedText}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground mt-0.5">{item.helperText}</p>
-                      )}
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {isComplete ? item.completedText : item.helperText}
+                      </p>
                     </div>
 
                     {/* Action Button */}
-                    {!isLocked && (
-                      <Button
-                        variant={isComplete ? 'outline' : 'default'}
-                        size="sm"
-                        className={cn(
-                          isComplete && 'text-[#56bc77] border-[#56bc77]/30',
-                          !isComplete && 'bg-[#ebcc89] text-black hover:bg-[#d4b876]'
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleItemClick(item);
-                        }}
-                      >
-                        {isComplete ? 'Review' : 'Start'}
-                      </Button>
-                    )}
+                    <Button
+                      variant={isComplete ? 'outline' : 'default'}
+                      size="sm"
+                      className={cn(
+                        isComplete && 'text-[#56bc77] border-[#56bc77]/30'
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(item);
+                      }}
+                    >
+                      {isComplete ? 'Review' : 'Start'}
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -291,38 +259,38 @@ const SocialCapture = () => {
       <Dialog open={showCelebration} onOpenChange={setShowCelebration}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-2xl text-center">Your Social Capture is Live! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl text-center">Your Lead Machine is Live! 🎉</DialogTitle>
             <DialogDescription className="text-center text-base mt-2">
-              When someone comments on your posts with your keyword, they'll automatically receive a DM with your booking link.
+              Someone can now comment on your post, get a DM, land on your page, and join your email list — all while you sleep.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 my-4">
-            <p className="text-sm font-medium text-foreground">Here's what you just set up:</p>
+          <div className="space-y-3 my-6">
             {[
-              'Automatic DM to anyone who comments your keyword',
-              'Direct link to your booking page',
-              'Works on both Instagram and Facebook',
-            ].map((stat, i) => (
+              'Domain connected',
+              'Email sending configured',
+              'Content created',
+              'Automation built',
+            ].map((text, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-6 h-6 rounded-full bg-[#56bc77] flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm text-foreground">{stat}</span>
+                <span className="text-foreground">{text}</span>
               </div>
             ))}
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4 mb-4">
             <p className="text-sm text-muted-foreground">
-              Every comment on your posts is now a potential booked call — captured automatically while you sleep, coach, or live your life.
+              Ready to build a complete funnel with a full email sequence and offer? That's Phase 3.
             </p>
           </div>
 
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => {
               setShowCelebration(false);
-              navigate('/dashboard');
+              navigate('/dashboard?view=overview');
             }}>
               Back to Dashboard
             </Button>
@@ -330,7 +298,7 @@ const SocialCapture = () => {
               setShowCelebration(false);
               navigate('/funnel');
             }}>
-              Build Your Funnel
+              Start Phase 3
             </Button>
           </div>
         </DialogContent>
@@ -339,4 +307,4 @@ const SocialCapture = () => {
   );
 };
 
-export default SocialCapture;
+export default Phase2;
