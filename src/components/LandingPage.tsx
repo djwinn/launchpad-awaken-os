@@ -148,7 +148,7 @@ export function LandingPage({
         </div>
 
         <p className="text-center text-sm mt-6 text-sidebar-ring">
-          This isn't a course you watch. It's a process that builds it for you.
+          This isn't a course you watch. It's a process that builds it with you.  
         </p>
       </section>
 
