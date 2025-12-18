@@ -58,14 +58,16 @@ export function PhaseCard({
         <p className="text-muted-foreground leading-relaxed min-h-[96px]">{description}</p>
 
         <div className="mt-4 space-y-4">
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm min-h-[20px]">
             <span className="text-muted-foreground">{timeEstimate}</span>
             {progress && <span className="text-muted-foreground">
                 {progress.current}/{progress.total} complete
               </span>}
           </div>
 
-          {progress && <Progress value={progress.current / progress.total * 100} className="h-2" />}
+          <div className="min-h-[8px]">
+            {progress && <Progress value={progress.current / progress.total * 100} className="h-2" />}
+          </div>
 
           <div className={cn('flex flex-col gap-2', !secondaryButtonLabel && 'flex-row')}>
             <Button onClick={onClick} className={cn('flex-1 font-semibold', isComplete ? 'bg-[#56bc77]/10 text-[#56bc77] hover:bg-[#56bc77]/20 border border-[#56bc77]/30' : 'bg-[#ebcc89] text-black hover:bg-[#d4b876]')} variant={isComplete ? 'outline' : 'default'}>
