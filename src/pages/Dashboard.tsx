@@ -2,26 +2,111 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, MessageSquareMore, Magnet } from 'lucide-react';
+import { Loader2, CheckCircle, MessageSquareMore, Magnet, Sparkles, ArrowRight } from 'lucide-react';
 import { PhaseCard } from '@/components/dashboard/PhaseCard';
 import { ProgressHeader } from '@/components/dashboard/ProgressHeader';
 import awakenLogo from '@/assets/awaken-logo-white.png';
+
+const WELCOME_DISMISSED_KEY = 'awaken_welcome_dismissed';
 
 const Dashboard = () => {
   const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const [loadingProgress, setLoadingProgress] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (account) {
       setLoadingProgress(false);
+      
+      // Check if this is a new user who hasn't seen the welcome screen
+      const hasProgress = account.phase_1_complete || account.phase_2_complete || account.phase_3_complete;
+      const phase1Data = account.phase_1_data as Record<string, unknown> || {};
+      const hasStarted = (phase1Data.items_complete as number) > 0;
+      const welcomeDismissed = localStorage.getItem(`${WELCOME_DISMISSED_KEY}_${account.location_id}`);
+      
+      // Show welcome for new users who haven't started and haven't dismissed
+      if (!hasProgress && !hasStarted && !welcomeDismissed) {
+        setShowWelcome(true);
+      }
     }
   }, [account]);
+
+  const handleDismissWelcome = () => {
+    if (account) {
+      localStorage.setItem(`${WELCOME_DISMISSED_KEY}_${account.location_id}`, 'true');
+    }
+    setShowWelcome(false);
+  };
 
   if (loadingProgress || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Welcome screen for new users
+  if (showWelcome) {
+    const userName = account.demo_name?.split(' ')[0] || 'there';
+    
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#605547' }}>
+        <header className="border-b border-white/10 backdrop-blur-sm" style={{ backgroundColor: 'rgba(96, 85, 71, 0.9)' }}>
+          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <img src={awakenLogo} alt="AwakenOS" className="h-8 md:h-10" />
+          </div>
+        </header>
+        
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="max-w-2xl text-center space-y-8">
+            <div className="w-16 h-16 rounded-full bg-[#ebcc89]/20 flex items-center justify-center mx-auto">
+              <Sparkles className="h-8 w-8 text-[#ebcc89]" />
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                Welcome{userName !== 'there' ? `, ${userName}` : ''}! 👋
+              </h1>
+              <p className="text-xl text-white/80">
+                You're about to set up your complete coaching business system.
+              </p>
+            </div>
+            
+            <div className="bg-white/10 rounded-xl p-6 text-left space-y-4">
+              <p className="text-white/90">
+                In the next hour or so, you'll have everything you need to:
+              </p>
+              <ul className="space-y-3 text-white/80">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-[#56bc77] flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-white">Look professional</strong> — booking page, contracts, payments ready</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-[#56bc77] flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-white">Capture leads automatically</strong> — social comments become booked calls</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-[#56bc77] flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-white">Convert leads to clients</strong> — lead magnets, landing pages, email sequences</span>
+                </li>
+              </ul>
+            </div>
+            
+            <p className="text-white/60 text-sm">
+              Take your time — there's no rush. Each section is designed to guide you step by step.
+            </p>
+            
+            <Button 
+              onClick={handleDismissWelcome}
+              className="bg-[#ebcc89] text-black hover:bg-[#d4b876] px-8 py-6 text-lg"
+            >
+              Let's Get Started
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+        </main>
       </div>
     );
   }
