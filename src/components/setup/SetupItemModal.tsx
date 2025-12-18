@@ -599,8 +599,8 @@ After generating, say: "Review it above and make any edits you need. When you're
                 onClick={handleComplete}
                 disabled={isCompleting || !canComplete}
                 className={cn(
-                  'w-full',
-                  isComplete && 'text-[#56bc77] border-[#56bc77]/30'
+                  'w-full bg-[#56bc77]/20 text-[#56bc77] border-[#56bc77]/40 hover:bg-[#56bc77]/30 hover:text-[#56bc77]',
+                  isComplete && 'bg-[#56bc77] text-white hover:bg-[#56bc77]/90'
                 )}
               >
                 {isCompleting ? (
