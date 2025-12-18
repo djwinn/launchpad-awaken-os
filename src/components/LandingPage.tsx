@@ -94,7 +94,9 @@ export function LandingPage({
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 md:gap-10 items-start">
           {/* Benefits */}
           <div className="space-y-6 bg-white rounded-xl p-6 shadow-lg h-full">
-            <h2 className="text-2xl font-bold md:text-xl" style={{ color: '#605547' }}>
+            <h2 className="text-2xl font-bold md:text-xl" style={{
+            color: '#605547'
+          }}>
               After a few hours, you'll be ready to:
             </h2>
             <ul className="space-y-4">
@@ -145,7 +147,7 @@ export function LandingPage({
           </Card>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-sm mt-6 text-sidebar-ring">
           No tutorials. No guesswork. Just follow the steps.
         </p>
       </section>
