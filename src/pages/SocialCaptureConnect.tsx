@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Loader2, Check, ExternalLink, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getPhase1Data, getPhase2Data, updatePhase2Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const steps = [
@@ -21,7 +21,7 @@ const steps = [
 ];
 
 const SocialCaptureConnect = () => {
-  const { user, loading } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
@@ -30,28 +30,22 @@ const SocialCaptureConnect = () => {
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
 
     const loadData = async () => {
-      const { data } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_email', user.email)
-        .maybeSingle();
-
-      if (data) {
-        const d = data as any;
-        setLocationId(d.location_id);
-        setIsComplete(d.social_accounts_connected ?? false);
-        if (d.social_accounts_connected) {
-          setCheckedSteps(new Array(steps.length).fill(true));
-        }
+      const phase1Data = await getPhase1Data(account.location_id);
+      const phase2Data = await getPhase2Data(account.location_id);
+      
+      setLocationId(phase1Data.location_id || null);
+      setIsComplete(phase2Data.social_accounts_connected);
+      if (phase2Data.social_accounts_connected) {
+        setCheckedSteps(new Array(steps.length).fill(true));
       }
       setLoadingData(false);
     };
 
     loadData();
-  }, [user, loading]);
+  }, [account]);
 
   const handleStepToggle = (index: number) => {
     if (isComplete) return;
@@ -63,12 +57,10 @@ const SocialCaptureConnect = () => {
   const allChecked = checkedSteps.every(Boolean);
 
   const handleComplete = async () => {
-    if (!user?.email || !allChecked) return;
+    if (!account?.location_id || !allChecked) return;
 
-    await (supabase
-      .from('user_progress')
-      .update({ social_accounts_connected: true } as any)
-      .eq('user_email', user.email));
+    await updatePhase2Data(account.location_id, { social_accounts_connected: true });
+    await refreshAccount();
 
     toast({ title: 'Social accounts connected!' });
     setIsComplete(true);
@@ -82,17 +74,12 @@ const SocialCaptureConnect = () => {
     return 'https://app.awaken.digital';
   };
 
-  if (loading || loadingData) {
+  if (loadingData || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (
