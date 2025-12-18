@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -26,9 +26,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ArrowLeft, Loader2, Check, ChevronDown, ChevronUp, Play, Copy, X, Plus, RotateCcw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { getPhase3Data, updatePhase3Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 interface BuildProgress {
@@ -121,7 +121,7 @@ const DEFAULT_CONTENT: EditableContent = {
 };
 
 const FunnelBuild = () => {
-  const { user, loading } = useAuth();
+  const { account, refreshAccount } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loadingData, setLoadingData] = useState(true);
@@ -271,41 +271,34 @@ const FunnelBuild = () => {
   }, []);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
 
     const loadData = async () => {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_email', user.email)
-        .maybeSingle();
+      const phase3Data = await getPhase3Data(account.location_id);
+      
+      setBlueprint(phase3Data.funnel_blueprint ?? null);
+      setOriginalBlueprint(phase3Data.funnel_blueprint ?? null);
+      
+      if (!phase3Data.funnel_craft_complete) {
+        toast({
+          title: "Complete Craft Your Funnel First",
+          description: "You need to craft your funnel before you can build it.",
+          variant: "destructive",
+        });
+        navigate('/funnel');
+        return;
+      }
 
-      if (!error && data) {
-        const d = data as any;
-        setBlueprint(d.funnel_blueprint ?? null);
-        setOriginalBlueprint(d.funnel_blueprint ?? null);
-        
-        if (!d.funnel_craft_complete) {
-          toast({
-            title: "Complete Craft Your Funnel First",
-            description: "You need to craft your funnel before you can build it.",
-            variant: "destructive",
-          });
-          navigate('/funnel');
-          return;
-        }
-
-        // Parse the blueprint into editable content
-        if (d.funnel_blueprint) {
-          const parsedContent = parseBlueprint(d.funnel_blueprint);
-          setContent(parsedContent);
-        }
+      // Parse the blueprint into editable content
+      if (phase3Data.funnel_blueprint) {
+        const parsedContent = parseBlueprint(phase3Data.funnel_blueprint);
+        setContent(parsedContent);
       }
       setLoadingData(false);
     };
 
     loadData();
-  }, [user, loading, navigate, toast, parseBlueprint]);
+  }, [account, navigate, toast, parseBlueprint]);
 
   const completedCount = Object.values(progress).filter(Boolean).length;
   const progressPercentage = Math.round((completedCount / 5) * 100);
@@ -326,13 +319,11 @@ const FunnelBuild = () => {
     const newCompletedCount = Object.values(newProgress).filter(Boolean).length;
     const isAllComplete = newCompletedCount === 5;
 
-    if (user?.email) {
-      await (supabase
-        .from('user_progress')
-        .update({
-          funnel_build_complete: isAllComplete,
-        } as any)
-        .eq('user_email', user.email));
+    if (account?.location_id) {
+      await updatePhase3Data(account.location_id, {
+        funnel_build_complete: isAllComplete,
+      });
+      await refreshAccount();
     }
 
     if (checked) {
@@ -469,17 +460,12 @@ ${lm.conclusion}`;
     });
   };
 
-  if (loading || loadingData) {
+  if (loadingData || !account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (

@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ArrowLeft, Loader2, Send, Copy, Check, ChevronDown, ChevronRight, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { updatePhase3Data } from '@/lib/phase-data';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 interface Message {
@@ -46,7 +46,7 @@ const MILESTONES = {
 };
 
 const FunnelCraft = () => {
-  const { user, loading } = useAuth();
+  const { account } = useAccount();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -87,7 +87,7 @@ const FunnelCraft = () => {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (!user?.email || loading) return;
+    if (!account?.location_id) return;
     
     if (messages.length === 0) {
       setMessages([
@@ -97,7 +97,7 @@ const FunnelCraft = () => {
         },
       ]);
     }
-  }, [user, loading, messages.length]);
+  }, [account, messages.length]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -331,7 +331,7 @@ const FunnelCraft = () => {
 
     const outputDoc = `YOUR FUNNEL BLUEPRINT
 
-Created for: ${userName || user?.user_metadata?.name || 'You'}
+Created for: ${userName || account?.demo_name || 'You'}
 Date: ${today}
 
 ═══════════════════════════════════════════════════════════════
@@ -720,14 +720,11 @@ NEXT STEPS
     setIsComplete(true);
     setGenerating(false);
 
-    if (user?.email) {
-      await supabase
-        .from('user_progress')
-        .update({
-          funnel_craft_complete: true,
-          funnel_blueprint: outputDoc,
-        } as any)
-        .eq('user_email', user.email);
+    if (account?.location_id) {
+      await updatePhase3Data(account.location_id, {
+        funnel_craft_complete: true,
+        funnel_blueprint: outputDoc,
+      });
     }
 
     setMessages(prev => [
@@ -772,17 +769,12 @@ NEXT STEPS
   const lastMessage = messages[messages.length - 1];
   const hasOptions = lastMessage?.role === 'assistant' && lastMessage?.options;
 
-  if (loading) {
+  if (!account) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
-  }
-
-  if (!user) {
-    navigate('/auth');
-    return null;
   }
 
   return (
