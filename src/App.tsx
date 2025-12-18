@@ -8,10 +8,11 @@ import { AuthGate } from "@/components/auth/AuthGate";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import Phase2 from "./pages/Phase2";
-import Phase2Domain from "./pages/Phase2Domain";
-import Phase2EmailSetup from "./pages/Phase2EmailSetup";
 import Phase2AIConversation from "./pages/Phase2AIConversation";
-import Phase2BuildAutomation from "./pages/Phase2BuildAutomation";
+import Phase2LandingPage from "./pages/Phase2LandingPage";
+import Phase2EmailDelivery from "./pages/Phase2EmailDelivery";
+import Phase2GoLive from "./pages/Phase2GoLive";
+import Phase2SocialTest from "./pages/Phase2SocialTest";
 import Funnel from "./pages/Funnel";
 import FunnelCraft from "./pages/FunnelCraft";
 import FunnelBuild from "./pages/FunnelBuild";
@@ -33,10 +34,11 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/setup" element={<Setup />} />
               <Route path="/phase2" element={<Phase2 />} />
-              <Route path="/phase2/domain" element={<Phase2Domain />} />
-              <Route path="/phase2/email-setup" element={<Phase2EmailSetup />} />
-              <Route path="/phase2/ai-conversation" element={<Phase2AIConversation />} />
-              <Route path="/phase2/build-automation" element={<Phase2BuildAutomation />} />
+              <Route path="/phase2/content" element={<Phase2AIConversation />} />
+              <Route path="/phase2/landing-page" element={<Phase2LandingPage />} />
+              <Route path="/phase2/email-delivery" element={<Phase2EmailDelivery />} />
+              <Route path="/phase2/go-live" element={<Phase2GoLive />} />
+              <Route path="/phase2/social-test" element={<Phase2SocialTest />} />
               {/* Legacy routes redirect to new Phase 2 */}
               <Route path="/social-capture" element={<Phase2 />} />
               <Route path="/funnel" element={<Funnel />} />

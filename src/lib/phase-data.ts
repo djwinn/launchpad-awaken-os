@@ -11,22 +11,28 @@ export interface Phase1Data {
   location_id?: string;
 }
 
-// Phase 2 data structure (redesigned)
+// Phase 2 data structure (redesigned - 5 steps)
 export interface Phase2Data {
   started: boolean;
-  // Step 1: Domain
+  // Step 1: Create Your Content
+  content_generated: boolean;
+  content_outputs: Phase2ContentOutputs | null;
+  // Step 2: Build Your Landing Page
+  landing_page_built: boolean;
+  // Step 3: Set Up Email Delivery
+  email_delivery_built: boolean;
+  // Step 4: Go Live (Domain + Email Sending + Publish)
   domain_connected: boolean;
   domain_value: string;
   has_domain: boolean;
-  // Step 2: Email
-  email_domain_connected: boolean;
+  email_sending_configured: boolean;
   email_subdomain: string;
   email_from_address: string;
-  // Step 3: Content
-  content_generated: boolean;
-  content_outputs: Phase2ContentOutputs | null;
-  // Step 4: Automation
-  automation_built: boolean;
+  page_published: boolean;
+  // Step 5: Connect Social & Test
+  social_connected: boolean;
+  comment_automation_built: boolean;
+  tested: boolean;
 }
 
 export interface Phase2ContentOutputs {
@@ -169,29 +175,39 @@ export async function getPhase2Data(locationId: string): Promise<Phase2Data> {
   if (!phase2Data) {
     return {
       started: false,
+      content_generated: false,
+      content_outputs: null,
+      landing_page_built: false,
+      email_delivery_built: false,
       domain_connected: false,
       domain_value: '',
       has_domain: true,
-      email_domain_connected: false,
+      email_sending_configured: false,
       email_subdomain: '',
       email_from_address: '',
-      content_generated: false,
-      content_outputs: null,
-      automation_built: false,
+      page_published: false,
+      social_connected: false,
+      comment_automation_built: false,
+      tested: false,
     };
   }
 
   return {
     started: (phase2Data.started as boolean) || false,
+    content_generated: (phase2Data.content_generated as boolean) || false,
+    content_outputs: (phase2Data.content_outputs as Phase2ContentOutputs) || null,
+    landing_page_built: (phase2Data.landing_page_built as boolean) || false,
+    email_delivery_built: (phase2Data.email_delivery_built as boolean) || false,
     domain_connected: (phase2Data.domain_connected as boolean) || false,
     domain_value: (phase2Data.domain_value as string) || '',
     has_domain: phase2Data.has_domain !== false,
-    email_domain_connected: (phase2Data.email_domain_connected as boolean) || false,
+    email_sending_configured: (phase2Data.email_sending_configured as boolean) || false,
     email_subdomain: (phase2Data.email_subdomain as string) || '',
     email_from_address: (phase2Data.email_from_address as string) || '',
-    content_generated: (phase2Data.content_generated as boolean) || false,
-    content_outputs: (phase2Data.content_outputs as Phase2ContentOutputs) || null,
-    automation_built: (phase2Data.automation_built as boolean) || false,
+    page_published: (phase2Data.page_published as boolean) || false,
+    social_connected: (phase2Data.social_connected as boolean) || false,
+    comment_automation_built: (phase2Data.comment_automation_built as boolean) || false,
+    tested: (phase2Data.tested as boolean) || false,
   };
 }
 
@@ -202,11 +218,12 @@ export async function updatePhase2Data(
   const currentData = await getPhase2Data(locationId);
   const newData = { ...currentData, ...updates, started: true };
   
-  // Phase 2 is complete when all 4 steps are done
-  const phase2Complete = newData.domain_connected && 
-                         newData.email_domain_connected && 
-                         newData.content_generated && 
-                         newData.automation_built;
+  // Phase 2 is complete when all 5 steps are done
+  const phase2Complete = newData.content_generated && 
+                         newData.landing_page_built && 
+                         newData.email_delivery_built && 
+                         (newData.domain_connected && newData.email_sending_configured && newData.page_published) && 
+                         newData.tested;
 
   return updateAccountData(locationId, {
     phase_2_data: newData,
@@ -214,13 +231,14 @@ export async function updatePhase2Data(
   });
 }
 
-// Helper to calculate Phase 2 progress (0-4 items)
+// Helper to calculate Phase 2 progress (0-5 items)
 export function calculatePhase2Progress(data: Phase2Data): number {
   let count = 0;
-  if (data.domain_connected) count++;
-  if (data.email_domain_connected) count++;
   if (data.content_generated) count++;
-  if (data.automation_built) count++;
+  if (data.landing_page_built) count++;
+  if (data.email_delivery_built) count++;
+  if (data.domain_connected && data.email_sending_configured && data.page_published) count++;
+  if (data.tested) count++;
   return count;
 }
 
