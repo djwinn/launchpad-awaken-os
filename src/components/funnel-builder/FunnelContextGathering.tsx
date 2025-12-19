@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, ArrowRight, MessageSquare, CheckCircle2, Edit3, Home, Sparkles, TrendingUp } from 'lucide-react';
+import { Loader2, ArrowRight, MessageSquare, CheckCircle2, Edit3, Home, Sparkles, TrendingUp, Mic, MicOff } from 'lucide-react';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { cn } from '@/lib/utils';
 import { extractFunnelContext } from '@/lib/location-api';
 import { useToast } from '@/hooks/use-toast';
@@ -76,6 +77,17 @@ export function FunnelContextGathering({ userName, onContextComplete }: FunnelCo
   const [isProcessingConversation, setIsProcessingConversation] = useState(false);
 
   const locationId = account?.location_id || '';
+
+  // Voice input
+  const { isRecording, isTranscribing, toggleRecording } = useVoiceInput({
+    locationId,
+    onTranscription: (text) => {
+      setConversationInput(prev => {
+        const trimmed = prev.trim();
+        return trimmed ? trimmed + ' ' + text : text;
+      });
+    }
+  });
 
   // Check for Phase 2 data on mount
   useEffect(() => {
@@ -416,7 +428,7 @@ export function FunnelContextGathering({ userName, onContextComplete }: FunnelCo
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <div className="relative">
+              <div className="relative flex gap-2">
                 <Textarea
                   value={conversationInput}
                   onChange={(e) => setConversationInput(e.target.value)}
@@ -427,17 +439,36 @@ export function FunnelContextGathering({ userName, onContextComplete }: FunnelCo
                     }
                   }}
                   placeholder="Type your answer..."
-                  className="min-h-[52px] max-h-32 pr-14 resize-none"
-                  disabled={isProcessingConversation}
+                  className="min-h-[52px] max-h-32 resize-none"
+                  disabled={isProcessingConversation || isTranscribing}
                 />
-                <Button
-                  onClick={handleConversationSubmit}
-                  disabled={!conversationInput.trim() || isProcessingConversation}
-                  size="icon"
-                  className="absolute right-2 bottom-2 h-8 w-8 bg-[#827666] hover:bg-[#6b625a]"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    size="icon"
+                    onClick={toggleRecording}
+                    disabled={isProcessingConversation}
+                    className={cn(
+                      "h-10 w-10 shrink-0",
+                      isRecording 
+                        ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
+                        : isTranscribing
+                          ? "bg-amber-500 text-white"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    )}
+                    title={isRecording ? "Click to stop recording" : isTranscribing ? "Transcribing..." : "Click to start voice input"}
+                  >
+                    {isTranscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    onClick={handleConversationSubmit}
+                    disabled={!conversationInput.trim() || isProcessingConversation}
+                    size="icon"
+                    className="h-10 w-10 bg-[#827666] hover:bg-[#6b625a]"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
