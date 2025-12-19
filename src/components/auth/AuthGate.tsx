@@ -37,12 +37,7 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (authState === 'demo-signup') {
-    return (
-      <DemoSignupForm 
-        onSuccess={handleDemoSignupSuccess} 
-        onExpired={() => setAuthState('expired')}
-      />
-    );
+    return <DemoSignupForm onSuccess={handleDemoSignupSuccess} />;
   }
 
   if (authState === 'expired') {

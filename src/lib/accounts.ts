@@ -135,7 +135,6 @@ export async function createDemoAccount(
   }
 
   const locationId = `demo_${generateRandomId()}`;
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   try {
     const response = await fetch(
@@ -149,7 +148,6 @@ export async function createDemoAccount(
         body: JSON.stringify({
           location_id: locationId,
           is_demo: true,
-          expires_at: expiresAt,
           demo_name: name,
           demo_email: email,
           demo_business: business || null,
@@ -243,11 +241,9 @@ export async function updateAccountPhaseData(
   }
 }
 
-export function isAccountExpired(account: Account): boolean {
-  if (!account.is_demo || !account.expires_at) {
-    return false;
-  }
-  return new Date(account.expires_at) < new Date();
+export function isAccountExpired(_account: Account): boolean {
+  // Expiration disabled - all accounts have unlimited access
+  return false;
 }
 
 export async function verifyDemoPassword(password: string): Promise<boolean> {
