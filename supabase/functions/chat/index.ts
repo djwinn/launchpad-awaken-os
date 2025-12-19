@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
+import { getCoachProfile, upsertCoachProfile, buildProfileContext } from "../_shared/profile-context.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -728,9 +729,16 @@ serve(async (req) => {
       );
     }
 
-    console.log('[CHAT] Processing request');
+    console.log('[CHAT] Processing request for location:', locationId);
 
-    // Use SYSTEM_PROMPT only - no user-controllable system prompts
+    // Fetch existing profile for context
+    const profile = await getCoachProfile(locationId!);
+    const profileContext = buildProfileContext(profile, 'phase3');
+    
+    // Build full system prompt with profile context prepended
+    const fullSystemPrompt = profileContext + SYSTEM_PROMPT;
+
+    // Use full system prompt - no user-controllable system prompts
     const maxTokens = isSetupChat ? 1024 : 16384;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -743,7 +751,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: maxTokens,
-        system: SYSTEM_PROMPT,
+        system: fullSystemPrompt,
         messages: sanitizedMessages,
         stream: !isSetupChat,
       }),

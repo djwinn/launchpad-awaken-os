@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
+import { getCoachProfile, upsertCoachProfile, buildProfileContext } from "../_shared/profile-context.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +21,7 @@ const RequestSchema = z.object({
   messages: z.array(MessageSchema).min(1).max(100)
 });
 
-const systemPrompt = `You are a friendly, warm AI assistant helping a coach train their AI assistant. Your job is to interview them about their business through a conversational flow.
+const baseSystemPrompt = `You are a friendly, warm AI assistant helping a coach train their AI assistant. Your job is to interview them about their business through a conversational flow.
 
 CONVERSATION FLOW:
 You will guide them through these questions, one at a time. After each answer, briefly acknowledge it (1-2 sentences max) then ask the next question.
@@ -113,7 +114,14 @@ serve(async (req) => {
       );
     }
 
-    console.log('[AI-FOUNDATION] Processing request');
+    console.log('[AI-FOUNDATION] Processing request for location:', locationId);
+
+    // Fetch existing profile for context
+    const profile = await getCoachProfile(locationId!);
+    const profileContext = buildProfileContext(profile, 'ai-foundation');
+    
+    // Build full system prompt with profile context prepended
+    const fullSystemPrompt = profileContext + baseSystemPrompt;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -124,7 +132,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: fullSystemPrompt },
           ...messages,
         ],
         max_tokens: 1024,
@@ -155,6 +163,31 @@ serve(async (req) => {
 
     const data = await response.json();
     const message = data.choices?.[0]?.message?.content || '';
+
+    // If conversation complete, extract and save profile updates
+    if (message.includes('GENERATION_COMPLETE')) {
+      console.log('[AI-FOUNDATION] Conversation complete, extracting profile data');
+      // Extract name, booking link and other key info from conversation
+      const profileUpdates: Record<string, string> = {};
+      
+      for (const msg of messages) {
+        if (msg.role === 'user') {
+          const content = msg.content.toLowerCase();
+          // Simple extraction - could be enhanced
+          const nameMatch = msg.content.match(/(?:my name is|i'm|i am)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i);
+          if (nameMatch) profileUpdates.coach_name = nameMatch[1];
+          
+          const linkMatch = msg.content.match(/(https?:\/\/[^\s]+)/i);
+          if (linkMatch && (linkMatch[1].includes('calendly') || linkMatch[1].includes('book') || linkMatch[1].includes('schedule'))) {
+            profileUpdates.booking_link = linkMatch[1];
+          }
+        }
+      }
+      
+      if (Object.keys(profileUpdates).length > 0) {
+        await upsertCoachProfile(locationId!, profileUpdates);
+      }
+    }
 
     return new Response(JSON.stringify({ message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
