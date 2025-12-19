@@ -13,7 +13,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check, Copy, Send, Loader2, Lightbulb } from 'lucide-react';
+import { User, Calendar, Link2, FileText, CreditCard, ExternalLink, Play, ChevronDown, Check, Copy, Send, Loader2, Lightbulb, Mic, MicOff } from 'lucide-react';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -171,6 +172,17 @@ export function SetupItemModal({ itemId, isComplete, onClose, onComplete, locati
   // Contract state
   const [contractText, setContractText] = useState('');
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+
+  // Voice input
+  const { isRecording, isTranscribing, toggleRecording } = useVoiceInput({
+    locationId,
+    onTranscription: (text) => {
+      setChatInput(prev => {
+        const trimmed = prev.trim();
+        return trimmed ? trimmed + ' ' + text : text;
+      });
+    }
+  });
 
   // Initialize chat when panel opens
   useEffect(() => {
@@ -485,8 +497,25 @@ After generating, say: "Review it above and make any edits you need. When you're
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Type your response..."
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    disabled={isChatLoading}
+                    disabled={isChatLoading || isTranscribing}
                   />
+                  <Button 
+                    type="button"
+                    size="icon" 
+                    onClick={toggleRecording}
+                    disabled={isChatLoading}
+                    className={cn(
+                      "shrink-0",
+                      isRecording 
+                        ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
+                        : isTranscribing
+                          ? "bg-amber-500 text-white"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    )}
+                    title={isRecording ? "Click to stop recording" : isTranscribing ? "Transcribing..." : "Click to start voice input"}
+                  >
+                    {isTranscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
                   <Button 
                     size="icon" 
                     onClick={handleSendMessage} 

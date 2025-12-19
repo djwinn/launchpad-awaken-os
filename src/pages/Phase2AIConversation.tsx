@@ -4,7 +4,8 @@ import { useAccount } from '@/contexts/AccountContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Loader2, Send, Copy, Download, RefreshCw, Check } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, Copy, Download, RefreshCw, Check, Mic, MicOff } from 'lucide-react';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getPhase2Data, updatePhase2Data, type Phase2Data, type Phase2ContentOutputs } from '@/lib/phase-data';
@@ -41,6 +42,16 @@ const Phase2AIConversation = () => {
   const [outputs, setOutputs] = useState<Phase2ContentOutputs | null>(null);
   const [generatingOutputs, setGeneratingOutputs] = useState(false);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
+
+  const { isRecording, isTranscribing, toggleRecording } = useVoiceInput({
+    locationId: account?.location_id,
+    onTranscription: (text) => {
+      setInput(prev => {
+        const trimmed = prev.trim();
+        return trimmed ? trimmed + ' ' + text : text;
+      });
+    }
+  });
 
   useEffect(() => {
     if (!account?.location_id) return;
@@ -440,15 +451,35 @@ const Phase2AIConversation = () => {
                     }}
                     placeholder="Type your answer..."
                     className="min-h-[60px] max-h-32 bg-white resize-none"
-                    disabled={isLoading}
+                    disabled={isLoading || isTranscribing}
                   />
-                  <Button
-                    onClick={handleSend}
-                    disabled={!input.trim() || isLoading}
-                    className="bg-[#827666] hover:bg-[#6b5f4f] h-auto"
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={toggleRecording}
+                      disabled={isLoading}
+                      className={cn(
+                        "h-10 w-10 shrink-0",
+                        isRecording 
+                          ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" 
+                          : isTranscribing
+                            ? "bg-amber-500 text-white"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                      )}
+                      title={isRecording ? "Click to stop recording" : isTranscribing ? "Transcribing..." : "Click to start voice input"}
+                    >
+                      {isTranscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isLoading}
+                      className="bg-[#827666] hover:bg-[#6b5f4f] h-10 w-10"
+                      size="icon"
+                    >
+                      <Send className="h-5 w-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
