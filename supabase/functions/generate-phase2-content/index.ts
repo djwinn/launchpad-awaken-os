@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getCoachProfile, upsertCoachProfile, buildProfileContext } from "../_shared/profile-context.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,11 +29,37 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are a marketing copywriter who specializes in helping coaches, healers, and wellness practitioners create authentic, warm content that converts. You use the PAS (Problem-Agitate-Solution) framework but keep the tone conversational and non-pushy.
+    // Fetch existing profile for enhanced context
+    const profile = await getCoachProfile(locationId);
+    console.log('[PHASE2] Profile found:', !!profile);
+
+    // Build profile context for the AI
+    let profileContext = '';
+    if (profile) {
+      profileContext = `
+## EXISTING PROFILE DATA (use to enhance content generation)
+
+${profile.coach_name ? `- Coach name: "${profile.coach_name}"` : ''}
+${profile.business_name ? `- Business: "${profile.business_name}"` : ''}
+${profile.transformation ? `- Transformation they provide: "${profile.transformation}"` : ''}
+${profile.origin_story ? `- Their story: "${profile.origin_story}"` : ''}
+${profile.unique_approach ? `- Unique approach: "${profile.unique_approach}"` : ''}
+${profile.offer_name ? `- Offer name: "${profile.offer_name}"` : ''}
+
+Use this background information to make the generated content more personal and aligned with their voice.
+
+---
+
+`;
+    }
+
+    const baseSystemPrompt = `You are a marketing copywriter who specializes in helping coaches, healers, and wellness practitioners create authentic, warm content that converts. You use the PAS (Problem-Agitate-Solution) framework but keep the tone conversational and non-pushy.
 
 Generate marketing content based on the user's business information. The content should feel personal, warm, and speak directly to their ideal client's pain points.
 
 IMPORTANT: Return ONLY valid JSON with no markdown formatting, no code blocks, just the raw JSON object.`;
+
+    const systemPrompt = profileContext + baseSystemPrompt;
 
     const userPrompt = `Create marketing content for this coach:
 
@@ -162,6 +189,19 @@ Return as JSON with this exact structure:
     }
 
     console.log('Generated outputs:', outputs);
+
+    // Save profile updates from this conversation
+    const profileUpdates: Record<string, string> = {};
+    if (coaching_type) profileUpdates.service_type = coaching_type;
+    if (ideal_client) profileUpdates.ideal_client_description = ideal_client;
+    if (main_problem) profileUpdates.main_problem = main_problem;
+    if (lead_magnet) profileUpdates.lead_magnet_idea = lead_magnet;
+    if (social_handle) profileUpdates.instagram_handle = social_handle;
+    
+    if (Object.keys(profileUpdates).length > 0) {
+      await upsertCoachProfile(locationId, profileUpdates);
+      console.log('[PHASE2] Updated profile with:', Object.keys(profileUpdates));
+    }
 
     return new Response(JSON.stringify({ outputs }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

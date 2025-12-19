@@ -68,6 +68,111 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_profiles: {
+        Row: {
+          booking_link: string | null
+          business_name: string | null
+          call_to_action: string | null
+          cancellation_policy: string | null
+          coach_name: string | null
+          created_at: string
+          credibility_points: string | null
+          id: string
+          ideal_client_demographics: string | null
+          ideal_client_description: string | null
+          ideal_client_situation: string | null
+          instagram_handle: string | null
+          lead_magnet_format: string | null
+          lead_magnet_idea: string | null
+          lead_magnet_title: string | null
+          location_id: string
+          main_problem: string | null
+          offer_description: string | null
+          offer_duration: string | null
+          offer_name: string | null
+          offer_price: string | null
+          origin_story: string | null
+          payment_terms: string | null
+          problem_feels_like: string | null
+          service_type: string | null
+          session_duration: string | null
+          session_format: string | null
+          transformation: string | null
+          unique_approach: string | null
+          updated_at: string
+          website_url: string | null
+          what_theyve_tried: string | null
+        }
+        Insert: {
+          booking_link?: string | null
+          business_name?: string | null
+          call_to_action?: string | null
+          cancellation_policy?: string | null
+          coach_name?: string | null
+          created_at?: string
+          credibility_points?: string | null
+          id?: string
+          ideal_client_demographics?: string | null
+          ideal_client_description?: string | null
+          ideal_client_situation?: string | null
+          instagram_handle?: string | null
+          lead_magnet_format?: string | null
+          lead_magnet_idea?: string | null
+          lead_magnet_title?: string | null
+          location_id: string
+          main_problem?: string | null
+          offer_description?: string | null
+          offer_duration?: string | null
+          offer_name?: string | null
+          offer_price?: string | null
+          origin_story?: string | null
+          payment_terms?: string | null
+          problem_feels_like?: string | null
+          service_type?: string | null
+          session_duration?: string | null
+          session_format?: string | null
+          transformation?: string | null
+          unique_approach?: string | null
+          updated_at?: string
+          website_url?: string | null
+          what_theyve_tried?: string | null
+        }
+        Update: {
+          booking_link?: string | null
+          business_name?: string | null
+          call_to_action?: string | null
+          cancellation_policy?: string | null
+          coach_name?: string | null
+          created_at?: string
+          credibility_points?: string | null
+          id?: string
+          ideal_client_demographics?: string | null
+          ideal_client_description?: string | null
+          ideal_client_situation?: string | null
+          instagram_handle?: string | null
+          lead_magnet_format?: string | null
+          lead_magnet_idea?: string | null
+          lead_magnet_title?: string | null
+          location_id?: string
+          main_problem?: string | null
+          offer_description?: string | null
+          offer_duration?: string | null
+          offer_name?: string | null
+          offer_price?: string | null
+          origin_story?: string | null
+          payment_terms?: string | null
+          problem_feels_like?: string | null
+          service_type?: string | null
+          session_duration?: string | null
+          session_format?: string | null
+          transformation?: string | null
+          unique_approach?: string | null
+          updated_at?: string
+          website_url?: string | null
+          what_theyve_tried?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           completed: boolean | null
@@ -104,6 +209,72 @@ export type Database = {
           updated_at?: string
           user_email?: string
           user_name?: string | null
+        }
+        Relationships: []
+      }
+      generated_outputs: {
+        Row: {
+          booking_page_copy: string | null
+          contract_draft: string | null
+          created_at: string
+          delivery_email: string | null
+          dm_template: string | null
+          email_sequence: Json | null
+          followup_email: string | null
+          full_landing_page: string | null
+          id: string
+          intake_form_questions: Json | null
+          landing_page_button: string | null
+          landing_page_headline: string | null
+          landing_page_subheadline: string | null
+          lead_magnet_pdf_content: string | null
+          location_id: string
+          offer_copy: string | null
+          post_caption: string | null
+          thank_you_page: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_page_copy?: string | null
+          contract_draft?: string | null
+          created_at?: string
+          delivery_email?: string | null
+          dm_template?: string | null
+          email_sequence?: Json | null
+          followup_email?: string | null
+          full_landing_page?: string | null
+          id?: string
+          intake_form_questions?: Json | null
+          landing_page_button?: string | null
+          landing_page_headline?: string | null
+          landing_page_subheadline?: string | null
+          lead_magnet_pdf_content?: string | null
+          location_id: string
+          offer_copy?: string | null
+          post_caption?: string | null
+          thank_you_page?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_page_copy?: string | null
+          contract_draft?: string | null
+          created_at?: string
+          delivery_email?: string | null
+          dm_template?: string | null
+          email_sequence?: Json | null
+          followup_email?: string | null
+          full_landing_page?: string | null
+          id?: string
+          intake_form_questions?: Json | null
+          landing_page_button?: string | null
+          landing_page_headline?: string | null
+          landing_page_subheadline?: string | null
+          lead_magnet_pdf_content?: string | null
+          location_id?: string
+          offer_copy?: string | null
+          post_caption?: string | null
+          thank_you_page?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

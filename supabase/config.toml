@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.extract-funnel-context]
 verify_jwt = false
+
+[functions.manage-coach-profile]
+verify_jwt = false
