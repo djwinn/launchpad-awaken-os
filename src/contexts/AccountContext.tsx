@@ -60,12 +60,6 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     const existingAccount = await getAccountByLocationId(effectiveLocationId);
 
     if (existingAccount) {
-      // Check if demo account has expired
-      if (isAccountExpired(existingAccount)) {
-        setAuthState('expired');
-        return;
-      }
-      
       setAccount(existingAccount);
       setAuthState('authenticated');
     } else {

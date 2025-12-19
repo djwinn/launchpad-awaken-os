@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { createDemoAccount, getAccountByEmail, isAccountExpired, Account } from '@/lib/accounts';
+import { createDemoAccount, getAccountByEmail, Account } from '@/lib/accounts';
 import { UserPlus, LogIn, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
@@ -19,10 +19,9 @@ const loginSchema = z.object({
 
 interface DemoSignupFormProps {
   onSuccess: (account: Account) => void;
-  onExpired?: () => void;
 }
 
-export function DemoSignupForm({ onSuccess, onExpired }: DemoSignupFormProps) {
+export function DemoSignupForm({ onSuccess }: DemoSignupFormProps) {
   const [mode, setMode] = useState<'signup' | 'login'>('signup');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -92,10 +91,6 @@ export function DemoSignupForm({ onSuccess, onExpired }: DemoSignupFormProps) {
       const account = await getAccountByEmail(result.data.email);
       
       if (account) {
-        if (isAccountExpired(account)) {
-          onExpired?.();
-          return;
-        }
         localStorage.setItem('awaken_location_id', account.location_id);
         onSuccess(account);
       } else {
@@ -129,7 +124,7 @@ export function DemoSignupForm({ onSuccess, onExpired }: DemoSignupFormProps) {
           </CardTitle>
           <CardDescription>
             {mode === 'signup' 
-              ? 'Enter your details to start your 7-day demo'
+              ? 'Enter your details to get started'
               : 'Enter your email to access your account'
             }
           </CardDescription>
@@ -186,8 +181,8 @@ export function DemoSignupForm({ onSuccess, onExpired }: DemoSignupFormProps) {
                 <p className="text-sm text-destructive text-center">{errors.form}</p>
               )}
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 style={{ backgroundColor: '#ebcc89', color: 'black' }}
                 disabled={isLoading}
@@ -201,10 +196,6 @@ export function DemoSignupForm({ onSuccess, onExpired }: DemoSignupFormProps) {
                   'Start Your Demo'
                 )}
               </Button>
-
-              <p className="text-xs text-muted-foreground text-center">
-                Your demo access expires in 7 days
-              </p>
             </form>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
