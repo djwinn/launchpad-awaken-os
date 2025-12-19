@@ -152,8 +152,23 @@ const Funnel = () => {
         </div>
       </header>
 
-      {/* Motivational Stat Banner */}
+      {/* Intro Video Section */}
       <div className="max-w-3xl mx-auto px-4 pt-6">
+        <div className="bg-white rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-foreground mb-3">Watch Before You Start</h2>
+          <div className="aspect-video bg-muted rounded-lg flex items-center justify-center border border-border">
+            {/* Replace this placeholder with your video embed */}
+            <div className="text-center p-6">
+              <Video className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Intro video will appear here</p>
+              <p className="text-xs text-muted-foreground mt-1">Add your video embed URL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Motivational Stat Banner */}
+      <div className="max-w-3xl mx-auto px-4 pt-4">
         <div className="bg-white rounded-lg p-4 flex items-start gap-3">
           <TrendingUp className="h-5 w-5 text-[#827666] mt-0.5 flex-shrink-0" />
           <div>
