@@ -17,6 +17,9 @@ import { useToast } from '@/hooks/use-toast';
 import { SetupItemModal } from '@/components/setup/SetupItemModal';
 import { PHASE_INTRO_STATS, PHASE1_CELEBRATION, SETUP_ITEM_MOTIVATION, getRandomCompletionMessage } from '@/lib/motivational-content';
 import { getPhase1Data, updatePhase1Data, type Phase1Data } from '@/lib/phase-data';
+import { CommunityShareSection } from '@/components/community/CommunityShareSection';
+import { COMMUNITY_MESSAGES } from '@/lib/community-share';
+import { useCommunityShare } from '@/hooks/useCommunityShare';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const setupItems = [
@@ -78,6 +81,7 @@ const Setup = () => {
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const { hasSharedPhase, markPhaseShared } = useCommunityShare(account?.location_id);
 
   useEffect(() => {
     if (!account?.location_id) return;
@@ -366,7 +370,17 @@ const Setup = () => {
             "{PHASE1_CELEBRATION.quote}"
           </p>
 
-          <div className="flex gap-3">
+          {/* Community Share Section */}
+          {!hasSharedPhase('phase1') && (
+            <CommunityShareSection
+              channel="wins"
+              prewrittenMessage={COMMUNITY_MESSAGES.phase1Complete}
+              onShare={() => markPhaseShared('phase1')}
+              onDismiss={() => {}}
+            />
+          )}
+
+          <div className="flex gap-3 mt-4">
             <Button variant="outline" className="flex-1" onClick={() => {
               setShowCelebration(false);
               navigate('/dashboard');

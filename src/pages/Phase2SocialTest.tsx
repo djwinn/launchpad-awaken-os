@@ -19,6 +19,9 @@ import { ArrowLeft, Loader2, Check, ExternalLink, Play, ChevronDown, Copy, Alert
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getPhase2Data, updatePhase2Data, type Phase2Data } from '@/lib/phase-data';
+import { CommunityShareSection } from '@/components/community/CommunityShareSection';
+import { COMMUNITY_MESSAGES } from '@/lib/community-share';
+import { useCommunityShare } from '@/hooks/useCommunityShare';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const SOCIAL_CHECKLIST = [
@@ -62,6 +65,7 @@ const Phase2SocialTest = () => {
   
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const { hasSharedPhase, markPhaseShared } = useCommunityShare(account?.location_id);
 
   useEffect(() => {
     if (!account?.location_id) return;
@@ -567,7 +571,17 @@ const Phase2SocialTest = () => {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          {/* Community Share Section */}
+          {!hasSharedPhase('phase2') && (
+            <CommunityShareSection
+              channel="wins"
+              prewrittenMessage={COMMUNITY_MESSAGES.phase2Complete}
+              onShare={() => markPhaseShared('phase2')}
+              onDismiss={() => {}}
+            />
+          )}
+
+          <div className="flex gap-3 mt-4">
             <Button variant="outline" className="flex-1" onClick={() => {
               setShowCelebration(false);
               navigate('/dashboard?view=overview');
