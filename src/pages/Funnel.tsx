@@ -16,6 +16,9 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getRandomCompletionMessage } from '@/lib/motivational-content';
 import { getPhase3Data, updatePhase3Data, type Phase3Data } from '@/lib/phase-data';
+import { CommunityShareSection } from '@/components/community/CommunityShareSection';
+import { COMMUNITY_MESSAGES } from '@/lib/community-share';
+import { useCommunityShare } from '@/hooks/useCommunityShare';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 const funnelItems = [
@@ -54,6 +57,7 @@ const Funnel = () => {
   });
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const { hasSharedPhase, markPhaseShared } = useCommunityShare(account?.location_id);
 
   useEffect(() => {
     if (!account?.location_id) return;
@@ -308,7 +312,17 @@ const Funnel = () => {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          {/* Community Share Section */}
+          {!hasSharedPhase('phase3') && (
+            <CommunityShareSection
+              channel="wins"
+              prewrittenMessage={COMMUNITY_MESSAGES.phase3Complete}
+              onShare={() => markPhaseShared('phase3')}
+              onDismiss={() => {}}
+            />
+          )}
+
+          <div className="flex gap-3 mt-4">
             <Button variant="outline" className="flex-1" onClick={() => {
               setShowCelebration(false);
               navigate('/dashboard');

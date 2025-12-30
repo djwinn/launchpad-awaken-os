@@ -29,6 +29,9 @@ import { ArrowLeft, Loader2, Check, ChevronDown, ChevronUp, Play, Copy, X, Plus,
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getPhase3Data, updatePhase3Data } from '@/lib/phase-data';
+import { CommunityShareSection } from '@/components/community/CommunityShareSection';
+import { COMMUNITY_MESSAGES } from '@/lib/community-share';
+import { useCommunityShare } from '@/hooks/useCommunityShare';
 import awakenLogo from '@/assets/awaken-logo-white.png';
 
 interface BuildProgress {
@@ -138,6 +141,7 @@ const FunnelBuild = () => {
   const [openSections, setOpenSections] = useState<string[]>(['landing_page']);
   const [showCelebration, setShowCelebration] = useState(false);
   const [confettiVisible, setConfettiVisible] = useState(false);
+  const { hasSharedPhase, markPhaseShared } = useCommunityShare(account?.location_id);
   const [content, setContent] = useState<EditableContent>(DEFAULT_CONTENT);
 
   // Parse blueprint into structured content
@@ -1133,7 +1137,17 @@ ${lm.conclusion}`;
             </p>
           </div>
 
-          <div className="flex gap-3">
+          {/* Community Share Section */}
+          {!hasSharedPhase('phase3') && (
+            <CommunityShareSection
+              channel="wins"
+              prewrittenMessage={COMMUNITY_MESSAGES.phase3Complete}
+              onShare={() => markPhaseShared('phase3')}
+              onDismiss={() => {}}
+            />
+          )}
+
+          <div className="flex gap-3 mt-4">
             <Button variant="outline" className="flex-1" onClick={() => {
               setShowCelebration(false);
               navigate('/dashboard');
