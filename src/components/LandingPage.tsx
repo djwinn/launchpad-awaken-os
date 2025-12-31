@@ -65,7 +65,7 @@ export function LandingPage({
             </div>
             <div className="flex-1 max-w-md">
               <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden shadow-lg">
-                <iframe src="https://www.youtube.com/embed/ECGHeaz8qFQ" title="Introduction Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
+                <iframe src="https://www.youtube.com/embed/rMrbxHA99vo" title="Introduction Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute inset-0 w-full h-full" />
               </div>
             </div>
           </div>
