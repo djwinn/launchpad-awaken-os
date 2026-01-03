@@ -12,6 +12,7 @@ const RATE_LIMITS: Record<string, { requests: number; windowSeconds: number }> =
   'ai-foundation-chat': { requests: 30, windowSeconds: 3600 },
   'generate-ai-outputs': { requests: 10, windowSeconds: 3600 },
   'manage-accounts': { requests: 100, windowSeconds: 3600 },
+  'generate-phase2-content': { requests: 20, windowSeconds: 3600 },
 };
 
 export function checkRateLimit(
