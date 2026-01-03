@@ -1,11 +1,24 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCoachProfile, upsertCoachProfile, buildProfileContext } from "../_shared/profile-context.ts";
+import { validateLocationId, createUnauthorizedResponse, checkRateLimit, createRateLimitResponse } from "../_shared/validate-location.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-location-id',
 };
+
+// Input validation schema
+const RequestSchema = z.object({
+  coaching_type: z.string().min(1).max(500),
+  ideal_client: z.string().min(1).max(2000),
+  main_problem: z.string().min(1).max(2000),
+  lead_magnet: z.string().min(1).max(500),
+  next_step: z.string().min(1).max(500),
+  social_handle: z.string().max(100).optional().default(''),
+  domain: z.string().max(200).optional().default(''),
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -14,15 +27,36 @@ serve(async (req) => {
   }
 
   try {
-    const locationId = req.headers.get('x-location-id');
-    if (!locationId) {
-      return new Response(JSON.stringify({ error: 'Missing location ID' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Validate location ID against database
+    const { locationId, error: authError, isExpired } = await validateLocationId(req);
+    if (authError || !locationId) {
+      if (isExpired) {
+        return new Response(JSON.stringify({ error: 'Account expired' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      return createUnauthorizedResponse(authError || 'Authentication required', corsHeaders);
     }
 
-    const { coaching_type, ideal_client, main_problem, lead_magnet, next_step, social_handle, domain } = await req.json();
+    // Check rate limit
+    const rateLimit = checkRateLimit(locationId, 'generate-phase2-content');
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
+    // Validate input
+    const rawBody = await req.json();
+    const parseResult = RequestSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error('[PHASE2] Invalid request format:', parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { coaching_type, ideal_client, main_problem, lead_magnet, next_step, social_handle, domain } = parseResult.data;
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
