@@ -41,7 +41,8 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       return;
     }
 
-    // Microphone prompts are commonly blocked inside embedded iframes (like the in-editor preview).
+    // Microphone access inside iframes depends on the embedding page's permissions policy.
+    // In the Lovable editor preview iframe, browsers will not show a prompt.
     let isEmbedded = false;
     try {
       isEmbedded = window.self !== window.top;
@@ -49,9 +50,14 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       isEmbedded = true;
     }
 
-    if (isEmbedded) {
+    const referrer = typeof document !== 'undefined' ? document.referrer : '';
+    const isEditorPreview =
+      isEmbedded &&
+      (/lovable\.dev/i.test(referrer) || window.location.hostname.startsWith('id-preview--'));
+
+    if (isEditorPreview) {
       toast({
-        title: "Microphone unavailable in preview",
+        title: "Microphone unavailable in editor preview",
         description: "Open this page in a new tab (or use the published site) to allow microphone access.",
         variant: "destructive"
       });
@@ -138,6 +144,16 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       const err = error as Error & { name?: string };
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        if (isEmbedded && !isEditorPreview) {
+          toast({
+            title: "Microphone blocked in embed",
+            description:
+              "This page is running inside an iframe. Your platform must allow microphone access (e.g. <iframe allow=\"microphone\">) and not block it via Permissions Policy, then reload and try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const isBlocked = permissionState === 'denied';
         toast({
           title: isBlocked ? "Microphone blocked" : "Microphone access denied",
