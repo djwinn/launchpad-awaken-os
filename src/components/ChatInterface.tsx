@@ -6,10 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2, Mic, MicOff, Paperclip, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { streamChat } from '@/lib/chat-api';
-import { transcribeAudio, parseDocument } from '@/lib/location-api';
+import { parseDocument } from '@/lib/location-api';
 import { isOutputComplete } from '@/lib/output-parser';
 import { updateConversationMessages, markConversationComplete } from '@/lib/conversations';
 import { useToast } from '@/hooks/use-toast';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useAccount } from '@/contexts/AccountContext';
 import type { Message, UserInfo } from '@/types/chat';
 import logo from '@/assets/logo.png';
@@ -49,115 +50,23 @@ export function ChatInterface({
   const { account } = useAccount();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
 
   const locationId = account?.location_id || '';
 
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-  }, []);
-
-  const startRecording = useCallback(async () => {
-    if (!locationId) {
-      toast({
-        title: "Not authenticated",
-        description: "Please log in to use voice input.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach(track => track.stop());
-        
-        if (audioChunksRef.current.length === 0) {
-          setIsRecording(false);
-          return;
-        }
-        
-        setIsTranscribing(true);
-        
-        try {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          
-          // Convert to base64
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          
-          reader.onloadend = async () => {
-            const base64Audio = (reader.result as string).split(',')[1];
-            
-            const data = await transcribeAudio(locationId, base64Audio);
-            
-            if (data.error) {
-              throw new Error(data.error);
-            }
-            
-            if (data.text) {
-              setInput(prev => {
-                const trimmed = prev.trim();
-                return trimmed ? trimmed + ' ' + data.text : data.text;
-              });
-            }
-            
-            setIsTranscribing(false);
-            setIsRecording(false);
-          };
-        } catch (error) {
-          console.error('Transcription error:', error);
-          toast({
-            title: "Transcription failed",
-            description: "Could not transcribe audio. Please try again.",
-            variant: "destructive"
-          });
-          setIsTranscribing(false);
-          setIsRecording(false);
-        }
-      };
-      
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-      
-    } catch (error) {
-      console.error('Microphone access error:', error);
-      toast({
-        title: "Microphone access denied",
-        description: "Please allow microphone access in your browser settings.",
-        variant: "destructive"
+  const { isRecording, isTranscribing, toggleRecording } = useVoiceInput({
+    locationId,
+    onTranscription: (text) => {
+      setInput(prev => {
+        const trimmed = prev.trim();
+        return trimmed ? trimmed + ' ' + text : text;
       });
     }
-  }, [toast, locationId]);
-
-  const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }, [isRecording, startRecording, stopRecording]);
+  });
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -41,23 +41,34 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       return;
     }
 
+    // Microphone prompts are commonly blocked inside embedded iframes (like the in-editor preview).
+    let isEmbedded = false;
     try {
-      // Check current permission state if available
-      if (navigator.permissions) {
+      isEmbedded = window.self !== window.top;
+    } catch {
+      isEmbedded = true;
+    }
+
+    if (isEmbedded) {
+      toast({
+        title: "Microphone unavailable in preview",
+        description: "Open this page in a new tab (or use the published site) to allow microphone access.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Note: Some browsers/environments (especially embedded contexts) can misreport Permissions API state.
+    // We record it for messaging, but we always attempt getUserMedia so a prompt can appear when possible.
+    let permissionState: PermissionState | null = null;
+
+    try {
+      if (navigator.permissions?.query) {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          permissionState = permissionStatus.state;
           console.log('Microphone permission state:', permissionStatus.state);
-          
-          if (permissionStatus.state === 'denied') {
-            toast({
-              title: "Microphone blocked",
-              description: "Microphone access was previously denied. Please click the lock/site settings icon in your browser's address bar and allow microphone access, then refresh the page.",
-              variant: "destructive"
-            });
-            return;
-          }
-        } catch (permError) {
-          // Permission query not supported, continue with getUserMedia
+        } catch {
           console.log('Permission query not supported, proceeding with getUserMedia');
         }
       }
@@ -127,9 +138,12 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       const err = error as Error & { name?: string };
       
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        const isBlocked = permissionState === 'denied';
         toast({
-          title: "Microphone access denied",
-          description: "Please click the lock/site settings icon in your browser's address bar, allow microphone access, and refresh the page.",
+          title: isBlocked ? "Microphone blocked" : "Microphone access denied",
+          description: isBlocked
+            ? "Microphone permission is set to Block for this site. Click the lock/site settings icon, allow microphone, then refresh the page."
+            : "Please allow microphone access when prompted. If you don't see a prompt, click the lock/site settings icon, allow microphone, then refresh the page.",
           variant: "destructive"
         });
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
