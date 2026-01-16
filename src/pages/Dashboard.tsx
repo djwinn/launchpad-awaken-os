@@ -93,8 +93,18 @@ const Dashboard = () => {
 
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="max-w-2xl text-center space-y-8">
-            <div className="w-16 h-16 rounded-full bg-[#ebcc89]/20 flex items-center justify-center mx-auto">
-              <Sparkles className="h-8 w-8 text-[#ebcc89]" />
+            {/* Intro Video */}
+            <div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/rMrbxHA99vo"
+                title="Welcome Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
             </div>
 
             <div className="space-y-4">
