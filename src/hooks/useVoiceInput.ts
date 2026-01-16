@@ -31,7 +31,37 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       return;
     }
 
+    // Check if mediaDevices is available (requires secure context)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast({
+        title: "Microphone not available",
+        description: "Your browser doesn't support microphone access. Please use a modern browser.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      // Check current permission state if available
+      if (navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          console.log('Microphone permission state:', permissionStatus.state);
+          
+          if (permissionStatus.state === 'denied') {
+            toast({
+              title: "Microphone blocked",
+              description: "Microphone access was previously denied. Please click the lock/site settings icon in your browser's address bar and allow microphone access, then refresh the page.",
+              variant: "destructive"
+            });
+            return;
+          }
+        } catch (permError) {
+          // Permission query not supported, continue with getUserMedia
+          console.log('Permission query not supported, proceeding with getUserMedia');
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       
@@ -91,13 +121,36 @@ export function useVoiceInput({ locationId, onTranscription }: UseVoiceInputOpti
       mediaRecorder.start();
       setIsRecording(true);
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Microphone access error:', error);
-      toast({
-        title: "Microphone access denied",
-        description: "Please allow microphone access in your browser settings.",
-        variant: "destructive"
-      });
+      
+      const err = error as Error & { name?: string };
+      
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        toast({
+          title: "Microphone access denied",
+          description: "Please click the lock/site settings icon in your browser's address bar, allow microphone access, and refresh the page.",
+          variant: "destructive"
+        });
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        toast({
+          title: "No microphone found",
+          description: "Please connect a microphone and try again.",
+          variant: "destructive"
+        });
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        toast({
+          title: "Microphone in use",
+          description: "Your microphone may be in use by another application. Please close other apps using the microphone and try again.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Microphone error",
+          description: err.message || "Could not access microphone. Please check your browser settings.",
+          variant: "destructive"
+        });
+      }
     }
   }, [toast, locationId, onTranscription]);
 
